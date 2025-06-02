@@ -28,9 +28,11 @@ def login_required(f):
 
 @app.route('/')
 def root():
-    if 'user_id' in session:
-        return redirect(url_for('index'))
-    return redirect(url_for('signin'))
+    return redirect(url_for('home'))
+
+@app.route('/home')
+def home():
+    return render_template('home.html')
 
 @app.route('/index')
 @login_required
@@ -43,8 +45,12 @@ def signin():
         return redirect(url_for('index'))
         
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not all([email, password]):
+            return jsonify({'error': 'Email and password are required'}), 400
         
         user = User.query.filter_by(email=email).first()
         
@@ -53,31 +59,28 @@ def signin():
             session['user_name'] = user.name
             return jsonify({'success': True, 'message': 'Login successful'})
         else:
-            return jsonify({'success': False, 'message': 'Invalid email or password'}), 401
+            return jsonify({'error': 'Invalid email or password'}), 401
     
     return render_template('signin.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirmPassword')
+        data = request.get_json()
+        name = data.get('name')
+        email = data.get('email')
+        password = data.get('password')
         
         # Validate input
-        if not all([name, email, password, confirm_password]):
-            return jsonify({'success': False, 'message': 'All fields are required'}), 400
+        if not all([name, email, password]):
+            return jsonify({'error': 'All fields are required'}), 400
         
         if len(password) < 6:
-            return jsonify({'success': False, 'message': 'Password must be at least 6 characters long'}), 400
-        
-        if password != confirm_password:
-            return jsonify({'success': False, 'message': 'Passwords do not match'}), 400
+            return jsonify({'error': 'Password must be at least 6 characters long'}), 400
         
         # Check if user already exists
         if User.query.filter_by(email=email).first():
-            return jsonify({'success': False, 'message': 'Email already registered'}), 400
+            return jsonify({'error': 'Email already registered'}), 400
         
         # Create new user
         user = User(name=name, email=email)
@@ -89,7 +92,8 @@ def signup():
             return jsonify({'success': True, 'message': 'Registration successful'})
         except Exception as e:
             db.session.rollback()
-            return jsonify({'success': False, 'message': 'Registration failed'}), 500
+            logger.error(f"Error during signup: {str(e)}")
+            return jsonify({'error': 'Registration failed. Please try again.'}), 500
     
     return render_template('signup.html')
 

@@ -6,14 +6,23 @@
     <title>Semsar Mate - Hotel Search</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        :root {
+            --navy: #0A2463;
+            --gold: #D4AF37;
+            --white: #FFFFFF;
+            --light-gold: #E5C76B;
+            --navy-light: #1A3B7D;
+        }
+
         body {
-            background-color: #f8f9fa;
+            background-color: var(--navy);
+            color: var(--white);
             padding: 20px;
         }
         .search-container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+            background: var(--white);
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -22,8 +31,9 @@
             margin-bottom: 20px;
             transition: transform 0.2s;
             height: 100%;
-            border: none;
+            border: 1px solid var(--navy);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: var(--white);
         }
         .hotel-card:hover {
             transform: translateY(-5px);
@@ -42,24 +52,25 @@
         .card-title {
             font-size: 1.25rem;
             margin-bottom: 1rem;
-            color: #2c3e50;
+            color: var(--navy);
+            font-weight: bold;
         }
         .price-tag {
-            color: #28a745;
+            color: var(--gold);
             font-weight: bold;
             font-size: 1.1rem;
         }
         .rating {
-            color: #ffc107;
+            color: var(--gold);
             font-weight: bold;
         }
         .hotel-description {
-            color: #6c757d;
+            color: var(--navy);
             font-size: 0.9rem;
             margin-top: 0.5rem;
         }
         .hotel-address {
-            color: #495057;
+            color: var(--navy);
             font-size: 0.9rem;
             margin-top: 0.5rem;
         }
@@ -102,8 +113,8 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background: #007bff;
-            color: white;
+            background: var(--gold);
+            color: var(--navy);
             border: none;
             border-radius: 50%;
             width: 40px;
@@ -118,7 +129,7 @@
             transition: background-color 0.2s;
         }
         .scroll-button:hover {
-            background: #0056b3;
+            background-color: var(--light-gold);
         }
         .scroll-button:active {
             transform: translateY(-50%) scale(0.95);
@@ -132,48 +143,81 @@
         .section-title {
             margin: 30px 0 20px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #007bff;
+            border-bottom: 2px solid var(--gold);
+            color: var(--navy);
         }
         /* Modal Styles */
         .hotel-modal .modal-content {
             border-radius: 15px;
+            background-color: var(--white);
         }
         .hotel-modal .modal-header {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #007bff;
+            background-color: var(--navy);
+            color: var(--white);
+            border-bottom: 2px solid var(--gold);
         }
         .hotel-modal .modal-title {
-            color: #2c3e50;
+            color: var(--gold);
             font-weight: bold;
         }
         .hotel-details {
             padding: 20px;
+            color: var(--navy);
         }
         .hotel-info-section {
             margin-bottom: 20px;
             padding: 15px;
-            background-color: #f8f9fa;
+            background-color: var(--white);
             border-radius: 10px;
+            border: 1px solid var(--navy);
         }
         .hotel-info-section h5 {
-            color: #007bff;
+            color: var(--navy);
             margin-bottom: 15px;
-            border-bottom: 1px solid #dee2e6;
+            border-bottom: 1px solid var(--gold);
             padding-bottom: 10px;
+        }
+        #modalHotelName {
+            color: var(--navy);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        #modalHotelPrice {
+            color: var(--gold);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        #modalHotelRating {
+            color: var(--gold);
+            font-weight: bold;
+        }
+        #modalHotelAddress {
+            color: var(--navy);
+            font-size: 1rem;
+        }
+        #modalHotelDescription {
+            color: var(--navy);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        #modalHotelLocation {
+            color: var(--navy);
+            font-size: 1rem;
         }
         .hotel-feature {
             display: flex;
             align-items: center;
             margin-bottom: 10px;
+            color: var(--navy);
         }
         .hotel-feature i {
-            color: #28a745;
+            color: var(--gold);
             margin-right: 10px;
             width: 20px;
         }
         .view-details-btn {
-            background-color: #007bff;
-            color: white;
+            background-color: var(--gold);
+            color: var(--navy);
             border: none;
             padding: 8px 15px;
             border-radius: 5px;
@@ -182,7 +226,7 @@
             margin-top: 10px;
         }
         .view-details-btn:hover {
-            background-color: #0056b3;
+            background-color: var(--light-gold);
         }
         .amenities-grid {
             display: grid;
@@ -194,12 +238,34 @@
             display: flex;
             align-items: center;
             padding: 8px;
-            background-color: #e9ecef;
+            background-color: var(--white);
+            border: 1px solid var(--navy);
             border-radius: 5px;
+            color: var(--navy);
         }
         .amenity-item i {
             margin-right: 8px;
-            color: #28a745;
+            color: var(--gold);
+        }
+        .modal-footer {
+            border-top: 1px solid var(--navy);
+            padding: 15px;
+        }
+        .modal-footer .btn-secondary {
+            background-color: var(--navy);
+            color: var(--white);
+            border: none;
+        }
+        .modal-footer .btn-primary {
+            background-color: var(--gold);
+            color: var(--navy);
+            border: none;
+        }
+        .modal-footer .btn-secondary:hover {
+            background-color: var(--navy-light);
+        }
+        .modal-footer .btn-primary:hover {
+            background-color: var(--light-gold);
         }
         /* Auth Modal Styles */
         .auth-modal .modal-content {
@@ -207,8 +273,8 @@
             border: none;
         }
         .auth-modal .modal-header {
-            background-color: #007bff;
-            color: white;
+            background-color: var(--navy);
+            color: var(--white);
             border-bottom: none;
             border-radius: 15px 15px 0 0;
         }
@@ -234,14 +300,14 @@
             margin-top: 20px;
         }
         .auth-modal .form-text a {
-            color: #007bff;
+            color: var(--gold);
             text-decoration: none;
         }
         .auth-modal .form-text a:hover {
             text-decoration: underline;
         }
         .auth-modal .close {
-            color: white;
+            color: var(--white);
             opacity: 1;
         }
         .header-buttons {
@@ -254,13 +320,13 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            color: #333;
+            color: var(--gold);
             font-size: 1.1rem;
         }
         
         .user-welcome span {
             font-weight: 600;
-            color: #007bff;
+            color: var(--white);
         }
         
         .btn-outline-danger {
@@ -275,26 +341,26 @@
         }
         /* Add these new styles for the navbar */
         .navbar {
-            background-color: #007bff;
+            background-color: var(--navy);
             padding: 1rem 2rem;
             margin-bottom: 2rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .navbar-brand {
-            color: white !important;
+            color: var(--gold) !important;
             font-size: 1.5rem;
             font-weight: bold;
         }
         
         .nav-link {
-            color: rgba(255,255,255,0.9) !important;
+            color: var(--white) !important;
             margin: 0 10px;
             transition: color 0.3s ease;
         }
         
         .nav-link:hover {
-            color: white !important;
+            color: var(--gold) !important;
         }
         
         .navbar-nav {
@@ -302,23 +368,23 @@
         }
         
         .user-welcome {
-            color: white;
+            color: var(--gold);
             margin-right: 1rem;
         }
         
         .user-welcome span {
             font-weight: 600;
-            color: white;
+            color: var(--white);
         }
         
         .btn-outline-light {
-            border-color: white;
-            color: white;
+            border-color: var(--gold);
+            color: var(--gold);
         }
         
         .btn-outline-light:hover {
-            background-color: white;
-            color: #007bff;
+            background-color: var(--gold);
+            color: var(--navy);
         }
     </style>
 </head>
@@ -572,9 +638,9 @@
                 document.querySelector('.scroll-left') : 
                 document.querySelector('.scroll-right');
             
-            button.style.backgroundColor = '#0056b3';
+            button.style.backgroundColor = '#D4AF37';
             setTimeout(() => {
-                button.style.backgroundColor = '#007bff';
+                button.style.backgroundColor = '#0A2463';
             }, 200);
         }
 
