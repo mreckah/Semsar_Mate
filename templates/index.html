@@ -73,17 +73,21 @@
             text-align: center;
             position: relative;
             padding: 0 40px; /* Add padding for scroll buttons */
+            max-width: 800px; /* Limit the container width */
+            margin-left: auto;
+            margin-right: auto;
         }
         .popular-cities-container {
             display: flex;
-            overflow-x: auto;
+            overflow-x: hidden; /* Changed from auto to hidden */
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             -ms-overflow-style: none;
             padding: 10px 0;
-            justify-content: center; /* Center the buttons */
+            justify-content: flex-start; /* Changed from center to flex-start */
             gap: 10px; /* Add consistent spacing between buttons */
+            width: 100%; /* Ensure container takes full width */
         }
         .popular-cities-container::-webkit-scrollbar {
             display: none; /* Chrome, Safari, Opera */
@@ -98,7 +102,8 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.9);
+            background: #007bff;
+            color: white;
             border: none;
             border-radius: 50%;
             width: 40px;
@@ -109,9 +114,14 @@
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             z-index: 1;
+            font-size: 20px;
+            transition: background-color 0.2s;
         }
         .scroll-button:hover {
-            background: white;
+            background: #0056b3;
+        }
+        .scroll-button:active {
+            transform: translateY(-50%) scale(0.95);
         }
         .scroll-left {
             left: 0;
@@ -143,7 +153,7 @@
             <div class="popular-cities">
                 <h3 class="section-title">Popular Cities</h3>
                 <button class="scroll-button scroll-left" onclick="scrollCities('left')" title="Scroll left" aria-label="Scroll cities left">
-                    <i class="fas fa-chevron-left"></i>
+                    &#10094;
                 </button>
                 <div class="popular-cities-container">
                     <!-- Moroccan Cities -->
@@ -165,7 +175,7 @@
                     <button class="btn btn-outline-primary" onclick="searchCity('Amsterdam')">Amsterdam</button>
                 </div>
                 <button class="scroll-button scroll-right" onclick="scrollCities('right')" title="Scroll right" aria-label="Scroll cities right">
-                    <i class="fas fa-chevron-right"></i>
+                    &#10095;
                 </button>
             </div>
             
@@ -193,83 +203,131 @@
         // Function to scroll cities
         function scrollCities(direction) {
             const container = document.querySelector('.popular-cities-container');
-            const scrollAmount = 200; // Adjust this value to control scroll distance
+            const scrollAmount = 300; // Increased scroll amount for better visibility
             
+            // Get current scroll position
+            const currentScroll = container.scrollLeft;
+            const maxScroll = container.scrollWidth - container.clientWidth;
+            
+            // Calculate new scroll position
+            let newScroll;
             if (direction === 'left') {
-                container.scrollLeft -= scrollAmount;
+                newScroll = Math.max(0, currentScroll - scrollAmount);
             } else {
-                container.scrollLeft += scrollAmount;
+                newScroll = Math.min(maxScroll, currentScroll + scrollAmount);
             }
+            
+            // Smooth scroll to new position
+            container.scrollTo({
+                left: newScroll,
+                behavior: 'smooth'
+            });
+            
+            // Add visual feedback
+            const button = direction === 'left' ? 
+                document.querySelector('.scroll-left') : 
+                document.querySelector('.scroll-right');
+            
+            button.style.backgroundColor = '#0056b3';
+            setTimeout(() => {
+                button.style.backgroundColor = '#007bff';
+            }, 200);
         }
+
+        // Update scroll button visibility based on scroll position
+        function updateScrollButtons() {
+            const container = document.querySelector('.popular-cities-container');
+            const leftButton = document.querySelector('.scroll-left');
+            const rightButton = document.querySelector('.scroll-right');
+            
+            // Show/hide left button
+            leftButton.style.display = container.scrollLeft > 0 ? 'flex' : 'none';
+            
+            // Show/hide right button
+            rightButton.style.display = 
+                container.scrollLeft < (container.scrollWidth - container.clientWidth) ? 'flex' : 'none';
+        }
+
+        // Reset scroll position to start
+        function resetScrollPosition() {
+            const container = document.querySelector('.popular-cities-container');
+            container.scrollLeft = 0;
+            updateScrollButtons();
+        }
+
+        // Add scroll event listener to update button visibility
+        document.querySelector('.popular-cities-container').addEventListener('scroll', updateScrollButtons);
+
+        // Initial setup
+        window.addEventListener('load', function() {
+            // Reset scroll position to start
+            resetScrollPosition();
+            // Search for Casablanca hotels
+            searchCity('Casablanca');
+        });
 
         // Function to search for a city
-        async function searchCity(city) {
+        function searchCity(city) {
             document.getElementById('cityInput').value = city;
-            await performSearch(city);
-        }
-
-        // Function to perform the search
-        async function performSearch(city) {
-            const resultsDiv = document.getElementById('results');
-            const loadingDiv = document.querySelector('.loading');
-            
-            resultsDiv.innerHTML = '';
-            loadingDiv.style.display = 'block';
-
-            try {
-                const response = await fetch('/search', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `city=${encodeURIComponent(city)}`
-                });
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    resultsDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
-                } else if (data.hotels.length === 0) {
-                    resultsDiv.innerHTML = '<div class="alert alert-info">No hotels found for this city.</div>';
-                } else {
-                    resultsDiv.innerHTML = `
-                        <h3 class="section-title">Hotels in ${city}</h3>
-                        <div class="row">
-                            ${data.hotels.map(hotel => `
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="card hotel-card">
-                                        <img src="${hotel.image_url}" class="hotel-image" alt="${hotel.name}" onerror="this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1080&q=80'">
-                                        <div class="card-body">
-                                            <h5 class="card-title">${hotel.name}</h5>
-                                            ${hotel.price ? `<p class="card-text price-tag">Price: $${hotel.price}</p>` : ''}
-                                            ${hotel.rating ? `<p class="card-text rating">Rating: ${hotel.rating}/10</p>` : ''}
-                                            ${hotel.address ? `<p class="card-text hotel-address"><strong>Address:</strong> ${hotel.address}</p>` : ''}
-                                            ${hotel.description ? `<p class="card-text hotel-description">${hotel.description}</p>` : ''}
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                resultsDiv.innerHTML = '<div class="alert alert-danger">An error occurred while searching for hotels.</div>';
-            } finally {
-                loadingDiv.style.display = 'none';
-            }
+            document.getElementById('searchForm').dispatchEvent(new Event('submit'));
         }
 
         // Handle form submission
-        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const city = document.getElementById('cityInput').value;
-            await performSearch(city);
+            searchHotels(city);
         });
 
-        // Load featured hotels on page load
-        window.addEventListener('load', async () => {
-            await searchCity('Casablanca'); // Load Casablanca hotels by default
-        });
+        // Function to search hotels
+        function searchHotels(city) {
+            const loading = document.querySelector('.loading');
+            const results = document.getElementById('results');
+            
+            loading.style.display = 'block';
+            results.innerHTML = '<h3 class="section-title">Search Results</h3><div class="row" id="hotelResults"></div>';
+            
+            fetch('/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `city=${encodeURIComponent(city)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                const hotelResults = document.getElementById('hotelResults');
+                
+                if (data.error) {
+                    hotelResults.innerHTML = `<div class="col-12"><div class="alert alert-warning">${data.error}</div></div>`;
+                    return;
+                }
+                
+                if (data.hotels && data.hotels.length > 0) {
+                    hotelResults.innerHTML = data.hotels.map(hotel => `
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card hotel-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">${hotel.name}</h5>
+                                    ${hotel.price ? `<p class="price-tag">${hotel.price}$</p>` : ''}
+                                    ${hotel.rating ? `<p class="rating">Rating: ${hotel.rating}/10</p>` : ''}
+                                    ${hotel.address ? `<p class="hotel-address">${hotel.address}</p>` : ''}
+                                    ${hotel.description ? `<p class="hotel-description">${hotel.description}</p>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    hotelResults.innerHTML = '<div class="col-12"><div class="alert alert-warning">No hotels found for this city.</div></div>';
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                results.innerHTML = '<div class="alert alert-danger">An error occurred while searching for hotels. Please try again.</div>';
+                console.error('Error:', error);
+            });
+        }
     </script>
 </body>
 </html> 
