@@ -256,6 +256,34 @@
                 max-width: 90%;
             }
         }
+
+        /* Add styles for the speak button */
+        .speak-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--navy);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .speak-button:hover {
+            transform: scale(1.1);
+            background: var(--gold);
+        }
+
+        .speak-button i {
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
@@ -338,8 +366,65 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Configuration
         const OPENROUTER_API_KEY = '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';
+        const API_CONFIG = {
+            model: 'anthropic/claude-3-haiku:beta',
+            max_tokens: 300,
+            system_prompt: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Keep responses concise and focused on hotel recommendations and travel advice.'
+        };
 
+        // Speech Synthesis
+        let speechSynthesis = window.speechSynthesis;
+        let speaking = false;
+        let currentUtterance = null;
+
+        function speakText(text) {
+            if (speaking) {
+                speechSynthesis.cancel();
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+
+            // Get available voices and set a preferred voice
+            const voices = speechSynthesis.getVoices();
+            const preferredVoice = voices.find(voice => voice.lang === 'en-US') || voices[0];
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+
+            utterance.onstart = () => {
+                speaking = true;
+                document.getElementById('speakButton').innerHTML = '<i class="fas fa-stop"></i>';
+            };
+
+            utterance.onend = () => {
+                speaking = false;
+                document.getElementById('speakButton').innerHTML = '<i class="fas fa-volume-up"></i>';
+            };
+
+            currentUtterance = utterance;
+            speechSynthesis.speak(utterance);
+        }
+
+        function toggleSpeech() {
+            const button = document.getElementById('speakButton');
+            if (speaking) {
+                speechSynthesis.cancel();
+                speaking = false;
+                button.innerHTML = '<i class="fas fa-volume-up"></i>';
+            } else {
+                const lastMessage = document.querySelector('.message.assistant:last-child .message-content');
+                if (lastMessage) {
+                    speakText(lastMessage.textContent);
+                }
+            }
+        }
+
+        // Event Handlers
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
                 sendMessage();
@@ -351,13 +436,13 @@
             sendMessage();
         }
 
+        // Message Handling
         async function sendMessage() {
             const input = document.getElementById('user-input');
             const message = input.value.trim();
             
             if (!message) return;
 
-            // Add user message
             addMessage(message, 'user');
             input.value = '';
 
@@ -371,12 +456,12 @@
                         'X-Title': 'Semsar Mate'
                     },
                     body: JSON.stringify({
-                        model: 'anthropic/claude-3-haiku:beta',
-                        max_tokens: 300,
+                        model: API_CONFIG.model,
+                        max_tokens: API_CONFIG.max_tokens,
                         messages: [
                             {
                                 role: 'system',
-                                content: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Keep responses concise and focused on hotel recommendations and travel advice.'
+                                content: API_CONFIG.system_prompt
                             },
                             {
                                 role: 'user',
@@ -400,9 +485,13 @@
 
                 const aiResponse = data.choices[0].message.content;
                 addMessage(aiResponse, 'assistant');
+                
+                // Auto-speak the response
+                speakText(aiResponse);
             } catch (error) {
                 console.error('Detailed Error:', error);
-                addMessage(`I apologize, but I'm having trouble connecting to my brain right now. Please try again in a moment. (Error: ${error.message})`, 'assistant');
+                const errorMessage = `I apologize, but I'm having trouble connecting to my brain right now. Please try again in a moment. (Error: ${error.message})`;
+                addMessage(errorMessage, 'assistant');
             }
         }
 
@@ -425,6 +514,19 @@
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
+
+        // Initialize speech synthesis
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => {
+                const voices = speechSynthesis.getVoices();
+                console.log('Available voices:', voices);
+            };
+        }
     </script>
+
+    <!-- Add the speak button to the HTML -->
+    <button id="speakButton" class="speak-button" onclick="toggleSpeech()" title="Toggle speech">
+        <i class="fas fa-volume-up"></i>
+    </button>
 </body>
 </html> 
