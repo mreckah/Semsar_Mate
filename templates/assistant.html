@@ -197,6 +197,47 @@
             transform: scale(1.05);
         }
 
+        .chat-input button.recording {
+            background: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .voice-status {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--navy);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .voice-status.active {
+            display: flex;
+        }
+
+        .voice-status i {
+            color: var(--gold);
+        }
+
         .suggestion-chips {
             display: flex;
             flex-wrap: wrap;
@@ -360,6 +401,13 @@
                 <button onclick="sendMessage()" title="Send message">
                     <i class="fas fa-paper-plane"></i>
                 </button>
+                <button id="voiceButton" onclick="toggleVoiceInput()" title="Start voice input">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <div id="voiceStatus" class="voice-status">
+                    <i class="fas fa-microphone"></i>
+                    <span>Listening...</span>
+                </div>
             </div>
         </div>
     </div>
@@ -522,6 +570,94 @@
                 console.log('Available voices:', voices);
             };
         }
+
+        // Speech Recognition
+        let recognition = null;
+        let isRecording = false;
+
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    document.getElementById('voiceButton').classList.add('recording');
+                    document.getElementById('voiceStatus').classList.add('active');
+                    // Stop any ongoing speech when starting recording
+                    if (speaking) {
+                        speechSynthesis.cancel();
+                        speaking = false;
+                        document.getElementById('speakButton').innerHTML = '<i class="fas fa-volume-up"></i>';
+                    }
+                };
+
+                recognition.onend = () => {
+                    isRecording = false;
+                    document.getElementById('voiceButton').classList.remove('recording');
+                    document.getElementById('voiceStatus').classList.remove('active');
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('user-input').value = transcript;
+                    sendMessage();
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    isRecording = false;
+                    document.getElementById('voiceButton').classList.remove('recording');
+                    document.getElementById('voiceStatus').classList.remove('active');
+                    
+                    let errorMessage = 'Error with voice input. ';
+                    switch(event.error) {
+                        case 'no-speech':
+                            errorMessage += 'No speech was detected.';
+                            break;
+                        case 'audio-capture':
+                            errorMessage += 'No microphone was found.';
+                            break;
+                        case 'not-allowed':
+                            errorMessage += 'Microphone access was denied.';
+                            break;
+                        default:
+                            errorMessage += 'Please try again.';
+                    }
+                    addMessage(errorMessage, 'assistant');
+                };
+            } else {
+                console.error('Speech recognition not supported');
+                document.getElementById('voiceButton').style.display = 'none';
+            }
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) {
+                initSpeechRecognition();
+            }
+
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                // Stop any ongoing speech before starting recording
+                if (speaking) {
+                    speechSynthesis.cancel();
+                    speaking = false;
+                    document.getElementById('speakButton').innerHTML = '<i class="fas fa-volume-up"></i>';
+                }
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error('Error starting speech recognition:', error);
+                }
+            }
+        }
+
+        // Initialize speech recognition when the page loads
+        window.addEventListener('load', initSpeechRecognition);
     </script>
 
     <!-- Add the speak button to the HTML -->
