@@ -72,6 +72,7 @@
             flex-direction: column;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            height: calc(100vh - 200px); /* Fixed height for the chat container */
         }
 
         .chat-header {
@@ -81,6 +82,7 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            flex-shrink: 0; /* Prevent header from shrinking */
         }
 
         .chat-header i {
@@ -95,6 +97,28 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            height: 100%; /* Take full height of parent */
+            scrollbar-width: thin; /* For Firefox */
+            scrollbar-color: var(--navy) var(--light-gold); /* For Firefox */
+        }
+
+        /* Custom scrollbar for Webkit browsers */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--light-gold);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--navy);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--gold);
         }
 
         .message {
@@ -138,6 +162,7 @@
             border-top: 1px solid #eee;
             display: flex;
             gap: 1rem;
+            flex-shrink: 0; /* Prevent input from shrinking */
         }
 
         .chat-input input {
@@ -216,6 +241,11 @@
             .assistant-container {
                 flex-direction: column;
                 padding: 1rem;
+                height: calc(100vh - 100px);
+            }
+
+            .chat-main {
+                height: calc(100vh - 300px);
             }
 
             .chat-sidebar {
@@ -235,7 +265,7 @@
             <a class="navbar-brand" href="/">
                 <i class="fas fa-hotel me-2"></i>Semsar Mate
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Toggle navigation menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -299,7 +329,7 @@
             </div>
             <div class="chat-input">
                 <input type="text" id="user-input" placeholder="Ask me anything about hotels and travel in Morocco..." onkeypress="handleKeyPress(event)">
-                <button onclick="sendMessage()">
+                <button onclick="sendMessage()" title="Send message">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
@@ -341,11 +371,12 @@
                         'X-Title': 'Semsar Mate'
                     },
                     body: JSON.stringify({
-                        model: 'anthropic/claude-3-opus:beta',
+                        model: 'anthropic/claude-3-haiku:beta',
+                        max_tokens: 300,
                         messages: [
                             {
                                 role: 'system',
-                                content: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Help users find the best hotels and provide travel advice.'
+                                content: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Keep responses concise and focused on hotel recommendations and travel advice.'
                             },
                             {
                                 role: 'user',
@@ -355,12 +386,23 @@
                     })
                 });
 
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('API Error:', errorData);
+                    throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
+                }
+
                 const data = await response.json();
+                if (!data.choices || !data.choices[0]?.message?.content) {
+                    console.error('Invalid API Response:', data);
+                    throw new Error('Invalid response format from API');
+                }
+
                 const aiResponse = data.choices[0].message.content;
                 addMessage(aiResponse, 'assistant');
             } catch (error) {
-                console.error('Error:', error);
-                addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+                console.error('Detailed Error:', error);
+                addMessage(`I apologize, but I'm having trouble connecting to my brain right now. Please try again in a moment. (Error: ${error.message})`, 'assistant');
             }
         }
 
