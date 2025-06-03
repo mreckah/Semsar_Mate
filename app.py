@@ -32,17 +32,14 @@ def root():
 
 @app.route('/home')
 def home():
+    if 'user_id' in session:
+        return render_template('index.html')
     return render_template('home.html')
-
-@app.route('/index')
-@login_required
-def index():
-    return render_template('index.html')
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
     if 'user_id' in session:
-        return redirect(url_for('index'))
+        return redirect(url_for('home'))
         
     if request.method == 'POST':
         data = request.get_json()
@@ -100,7 +97,7 @@ def signup():
 @app.route('/signout')
 def signout():
     session.clear()
-    return redirect(url_for('index'))
+    return redirect(url_for('home'))
 
 @app.route('/search', methods=['POST'])
 def search():
@@ -159,6 +156,10 @@ def get_user_info():
             'email': user.email
         })
     return jsonify({'error': 'User not found'}), 404
+
+@app.route('/assistant')
+def assistant():
+    return render_template('assistant.html')
 
 if __name__ == '__main__':
     try:

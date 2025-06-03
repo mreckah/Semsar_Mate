@@ -232,6 +232,67 @@
                 font-size: 0.9rem;
             }
         }
+
+        /* AI Assistant Styles */
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message.assistant {
+            align-items: flex-start;
+        }
+
+        .message-content {
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background-color: var(--navy);
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background-color: var(--light-gold);
+            color: var(--navy);
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input-container input {
+            flex: 1;
+        }
+
+        .chat-input-container button {
+            background-color: var(--navy);
+            border-color: var(--navy);
+        }
+
+        .chat-input-container button:hover {
+            background-color: var(--gold);
+            border-color: var(--gold);
+            color: var(--navy);
+        }
     </style>
 </head>
 <body>
@@ -247,6 +308,11 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
+                        <button class="nav-link" onclick="openAIAssistant()">
+                            <i class="fas fa-robot me-1"></i>Semsar Assistant
+                        </button>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/signin">
                             <i class="fas fa-sign-in-alt me-1"></i>Sign In
                         </a>
@@ -260,6 +326,35 @@
             </div>
         </div>
     </nav>
+
+    <!-- AI Assistant Modal -->
+    <div class="modal fade" id="aiAssistantModal" tabindex="-1" aria-labelledby="aiAssistantModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="aiAssistantModalLabel">
+                        <i class="fas fa-robot me-2"></i>Semsar Assistant
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="message assistant">
+                            <div class="message-content">
+                                Hello! I'm Semsar Assistant, your AI travel companion. How can I help you plan your perfect stay in Morocco?
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="user-input" class="form-control" placeholder="Ask me anything about hotels and travel in Morocco...">
+                        <button onclick="sendMessage()" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -355,5 +450,96 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // AI Assistant functionality
+        const OPENROUTER_API_KEY = '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';
+        let aiAssistantModal;
+
+        // Check for #assistant in URL on page load
+        window.addEventListener('load', function() {
+            if (window.location.hash === '#assistant') {
+                openAIAssistant();
+            }
+        });
+
+        function openAIAssistant() {
+            if (!aiAssistantModal) {
+                aiAssistantModal = new bootstrap.Modal(document.getElementById('aiAssistantModal'));
+            }
+            aiAssistantModal.show();
+            // Update URL without reloading the page
+            window.history.pushState({}, '', '#assistant');
+        }
+
+        // Handle browser back button
+        window.addEventListener('popstate', function() {
+            if (aiAssistantModal && window.location.hash !== '#assistant') {
+                aiAssistantModal.hide();
+            }
+        });
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            input.value = '';
+
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                        'HTTP-Referer': window.location.origin,
+                        'X-Title': 'Semsar Mate'
+                    },
+                    body: JSON.stringify({
+                        model: 'anthropic/claude-3-opus:beta',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Help users find the best hotels and provide travel advice.'
+                            },
+                            {
+                                role: 'user',
+                                content: message
+                            }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                const aiResponse = data.choices[0].message.content;
+                addMessage(aiResponse, 'assistant');
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+            }
+        }
+
+        function addMessage(content, sender) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${content}
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Handle Enter key in input
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
 </body>
 </html> 
