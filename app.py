@@ -30,6 +30,10 @@ def login_required(f):
 def root():
     return redirect(url_for('home'))
 
+@app.route('/index')
+def index():
+    return redirect(url_for('signin'))
+
 @app.route('/home')
 def home():
     if 'user_id' in session:
