@@ -386,36 +386,85 @@
             background-color: var(--gold);
             color: var(--navy);
         }
+        .navbar .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+            transition: color 0.2s, background 0.2s, transform 0.2s;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+        }
+        .navbar .nav-link:hover, .navbar .nav-link.active {
+            color: #D4AF37 !important;
+            background: rgba(212,175,55,0.08);
+            transform: translateY(-2px);
+        }
+        .navbar .navbar-brand {
+            color: #D4AF37 !important;
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+        }
+        .navbar .navbar-brand i {
+            font-size: 1.7rem;
+            margin-right: 0.5rem;
+        }
+        .user-welcome {
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .user-welcome i {
+            color: #D4AF37;
+            font-size: 1.2rem;
+            margin-right: 0.3rem;
+        }
+        .navbar .nav-link i {
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg">
+    <nav class="navbar navbar-expand-lg" style="background: #0A2463; box-shadow: 0 2px 10px rgba(10,36,99,0.2);">
         <div class="container">
-            <a class="navbar-brand" href="/index">Semsar Mate</a>
+            <a class="navbar-brand" href="/index" style="font-size: 1.5rem; font-weight: bold; color: #D4AF37;">
+                <i class="fas fa-hotel me-2"></i>Semsar Mate
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Toggle navigation menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/index">Home</a>
+                        <a class="nav-link" href="/index" style="color: #fff;">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showBookings()">My Bookings</a>
+                        <a class="nav-link" href="/search" style="color: #fff;">
+                            <i class="fas fa-search me-1"></i>Search
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showFavorites()">Favorites</a>
+                        <a class="nav-link" href="/blog" style="color: #fff;">
+                            <i class="fas fa-blog me-1"></i>Blog
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/assistant" >Semsar Assistant</a>
+                        <a class="nav-link" href="/assistant" style="color: #fff;">
+                            <i class="fas fa-robot me-1"></i>Semsar Assistant
+                        </a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center">
-                    <div class="user-welcome">
-                        Welcome,<span id="userName">Guest</span>
+                    <div class="user-welcome" style="color: #fff; margin-right: 1rem;">
+                        <i class="fas fa-user-circle me-1"></i>Welcome,<span id="userName"> Guest</span>
                     </div>
-                    <a href="/signout" class="btn btn-outline-light">Logout</a>
+                    <a href="/signout" class="nav-link" style="color: #fff;">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
                 </div>
             </div>
         </div>
