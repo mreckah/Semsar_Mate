@@ -22,19 +22,10 @@
     },
     "chat": {
         "header": "Semsar Assistant",
-        "inputPlaceholder": "Ask me anything about hotels and travel in Morocco...",
         "welcome": "Hello! I'm Semsar Assistant, your AI travel companion. How can I help you plan your perfect stay in Morocco?",
+        "inputPlaceholder": "Ask me anything about hotels and travel in Morocco...",
         "send": "Send message",
         "voice": "Start voice input",
         "listening": "Listening..."
-    },
-    "errors": {
-        "voice": {
-            "noSpeech": "No speech was detected.",
-            "noMic": "No microphone was found.",
-            "denied": "Microphone access was denied.",
-            "generic": "Please try again."
-        },
-        "connection": "I apologize, but I'm having trouble connecting to my brain right now. Please try again in a moment."
     }
 } 

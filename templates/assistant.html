@@ -419,34 +419,15 @@
         const API_CONFIG = {
             model: 'anthropic/claude-3-haiku:beta',
             max_tokens: 300,
-            system_prompt: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Keep responses concise and focused on hotel recommendations and travel advice. IMPORTANT: You must respond in the same language as the user\'s input. If the user speaks in French, respond in French. If the user speaks in English, respond in English. Never mix languages in your response.'
+            system_prompt: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Keep responses concise and focused on hotel recommendations and travel advice.'
         };
-
-        // Language detection function
-        function detectLanguage(text) {
-            // Enhanced French language detection with more patterns
-            const frenchPatterns = /\b(le|la|les|un|une|des|je|tu|il|elle|nous|vous|ils|elles|bonjour|merci|oui|non|s'il vous plaît|comment|où|quand|pourquoi|combien|quel|quelle|quels|quelles|bien|très|aussi|encore|toujours|jamais|maintenant|aujourd'hui|demain|hier|hôtel|chambre|prix|réservation|recherche|ville|voyage|vacances|visite|touriste|restaurant|plage|montagne|désert|culture|histoire|art|musée|monument|transport|bus|train|avion|voiture|taxi|métro|station|aéroport|gare|port|plage|mer|océan|rivière|lac|parc|jardin|place|rue|avenue|boulevard|quartier|centre|ville|pays|région|province|département|arrondissement|code postal|adresse|téléphone|email|internet|site web|application|service|client|accueil|réception|concierge|chambre|suite|appartement|villa|maison|restaurant|bar|piscine|spa|gym|salle|confort|luxe|standard|économique|prix|tarif|réduction|promotion|offre|spécial|saison|haute|basse|moyenne|saison|été|hiver|printemps|automne|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\b/i;
-            
-            // Check for French-specific characters and patterns
-            const frenchChars = /[éèêëàâçîïôöûüùœæ]/i;
-            
-            // If text contains French characters or matches French patterns, it's French
-            if (frenchPatterns.test(text) || frenchChars.test(text)) {
-                console.log('Detected French language');
-                return 'fr-FR';
-            }
-            
-            console.log('Detected English language');
-            return 'en-US';
-        }
 
         // Speech Synthesis
         let speechSynthesis = window.speechSynthesis;
         let speaking = false;
         let currentUtterance = null;
-        let currentLanguage = 'en-US';
 
-        function speakText(text, language) {
+        function speakText(text) {
             if (speaking) {
                 speechSynthesis.cancel();
             }
@@ -456,31 +437,11 @@
             utterance.pitch = 1.0;
             utterance.volume = 1.0;
 
-            // Get available voices and set a preferred voice for the detected language
+            // Get available voices and set a preferred voice
             const voices = speechSynthesis.getVoices();
-            let preferredVoice = null;
-
-            if (language === 'fr-FR') {
-                // Try to find a French voice
-                preferredVoice = voices.find(voice => 
-                    voice.lang === 'fr-FR' || 
-                    voice.lang === 'fr-CA' || 
-                    voice.name.includes('French')
-                );
-            } else {
-                // Try to find an English voice
-                preferredVoice = voices.find(voice => 
-                    voice.lang === 'en-US' || 
-                    voice.lang === 'en-GB' || 
-                    voice.name.includes('English')
-                );
-            }
-
+            const preferredVoice = voices.find(voice => voice.lang === 'en-US') || voices[0];
             if (preferredVoice) {
-                console.log('Using voice:', preferredVoice.name, 'for language:', language);
                 utterance.voice = preferredVoice;
-            } else {
-                console.log('No specific voice found for language:', language);
             }
 
             utterance.onstart = () => {
@@ -506,7 +467,7 @@
             } else {
                 const lastMessage = document.querySelector('.message.assistant:last-child .message-content');
                 if (lastMessage) {
-                    speakText(lastMessage.textContent, currentLanguage);
+                    speakText(lastMessage.textContent);
                 }
             }
         }
@@ -530,10 +491,6 @@
             
             if (!message) return;
 
-            // Detect language from user input
-            currentLanguage = detectLanguage(message);
-            console.log('Detected language:', currentLanguage);
-            
             addMessage(message, 'user');
             input.value = '';
 
@@ -552,9 +509,7 @@
                         messages: [
                             {
                                 role: 'system',
-                                content: API_CONFIG.system_prompt + (currentLanguage === 'fr-FR' ? 
-                                    ' Répondez en français.' : 
-                                    ' Respond in English.')
+                                content: API_CONFIG.system_prompt
                             },
                             {
                                 role: 'user',
@@ -579,13 +534,11 @@
                 const aiResponse = data.choices[0].message.content;
                 addMessage(aiResponse, 'assistant');
                 
-                // Auto-speak the response in the detected language
-                speakText(aiResponse, currentLanguage);
+                // Auto-speak the response
+                speakText(aiResponse);
             } catch (error) {
                 console.error('Detailed Error:', error);
-                const errorMessage = currentLanguage === 'fr-FR' 
-                    ? "Je m'excuse, mais j'ai des difficultés à me connecter à mon cerveau en ce moment. Veuillez réessayer dans un instant."
-                    : "I apologize, but I'm having trouble connecting to my brain right now. Please try again in a moment.";
+                const errorMessage = `I apologize, but I'm having trouble connecting to my brain right now. Please try again in a moment. (Error: ${error.message})`;
                 addMessage(errorMessage, 'assistant');
             }
         }
@@ -610,37 +563,27 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // Initialize speech synthesis voices
-        function initVoices() {
-            if (speechSynthesis.onvoiceschanged !== undefined) {
-                speechSynthesis.onvoiceschanged = () => {
-                    const voices = speechSynthesis.getVoices();
-                    console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
-                };
-            }
+        // Initialize speech synthesis
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => {
+                const voices = speechSynthesis.getVoices();
+                console.log('Available voices:', voices);
+            };
         }
 
         // Speech Recognition
         let recognition = null;
         let isRecording = false;
-        let retryCount = 0;
-        const MAX_RETRIES = 3;
 
         function initSpeechRecognition() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                // Use the appropriate SpeechRecognition constructor
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                recognition = new SpeechRecognition();
-                
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
                 recognition.continuous = false;
-                recognition.interimResults = true; // Enable interim results
-                recognition.maxAlternatives = 1;
-                recognition.lang = currentLanguage;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
 
                 recognition.onstart = () => {
-                    console.log('Speech recognition started');
                     isRecording = true;
-                    retryCount = 0;
                     document.getElementById('voiceButton').classList.add('recording');
                     document.getElementById('voiceStatus').classList.add('active');
                     // Stop any ongoing speech when starting recording
@@ -652,28 +595,15 @@
                 };
 
                 recognition.onend = () => {
-                    console.log('Speech recognition ended');
                     isRecording = false;
                     document.getElementById('voiceButton').classList.remove('recording');
                     document.getElementById('voiceStatus').classList.remove('active');
                 };
 
                 recognition.onresult = (event) => {
-                    console.log('Speech recognition result received');
-                    // Get the most recent result
-                    const result = event.results[event.results.length - 1];
-                    const transcript = result[0].transcript;
-                    
-                    // Only process if the result is final
-                    if (result.isFinal) {
-                        console.log('Final transcript:', transcript);
-                        document.getElementById('user-input').value = transcript;
-                        // Update language based on the transcript
-                        currentLanguage = detectLanguage(transcript);
-                        sendMessage();
-                    } else {
-                        console.log('Interim transcript:', transcript);
-                    }
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('user-input').value = transcript;
+                    sendMessage();
                 };
 
                 recognition.onerror = (event) => {
@@ -682,97 +612,24 @@
                     document.getElementById('voiceButton').classList.remove('recording');
                     document.getElementById('voiceStatus').classList.remove('active');
                     
-                    let errorMessage = currentLanguage === 'fr-FR' 
-                        ? 'Erreur avec la saisie vocale. '
-                        : 'Error with voice input. ';
-                    
+                    let errorMessage = 'Error with voice input. ';
                     switch(event.error) {
                         case 'no-speech':
-                            if (retryCount < MAX_RETRIES) {
-                                retryCount++;
-                                errorMessage = currentLanguage === 'fr-FR'
-                                    ? `Aucune parole détectée. Nouvelle tentative (${retryCount}/${MAX_RETRIES})...`
-                                    : `No speech detected. Retrying (${retryCount}/${MAX_RETRIES})...`;
-                                setTimeout(() => {
-                                    try {
-                                        recognition.start();
-                                    } catch (e) {
-                                        console.error('Retry failed:', e);
-                                    }
-                                }, 1000);
-                            } else {
-                                errorMessage += currentLanguage === 'fr-FR'
-                                    ? 'Aucune parole n\'a été détectée. Veuillez parler plus fort ou vérifier votre microphone.'
-                                    : 'No speech was detected. Please speak louder or check your microphone.';
-                            }
+                            errorMessage += 'No speech was detected.';
                             break;
                         case 'audio-capture':
-                            errorMessage += currentLanguage === 'fr-FR'
-                                ? 'Aucun microphone n\'a été trouvé. Veuillez vérifier vos paramètres de microphone.'
-                                : 'No microphone was found. Please check your microphone settings.';
+                            errorMessage += 'No microphone was found.';
                             break;
                         case 'not-allowed':
-                            errorMessage += currentLanguage === 'fr-FR'
-                                ? 'L\'accès au microphone a été refusé. Veuillez autoriser l\'accès au microphone dans les paramètres de votre navigateur.'
-                                : 'Microphone access was denied. Please allow microphone access in your browser settings.';
-                            break;
-                        case 'network':
-                            if (retryCount < MAX_RETRIES) {
-                                retryCount++;
-                                errorMessage = currentLanguage === 'fr-FR'
-                                    ? `Tentative de reconnexion (${retryCount}/${MAX_RETRIES})...`
-                                    : `Attempting to reconnect (${retryCount}/${MAX_RETRIES})...`;
-                                setTimeout(() => {
-                                    try {
-                                        recognition.start();
-                                    } catch (e) {
-                                        console.error('Retry failed:', e);
-                                    }
-                                }, 1000);
-                            } else {
-                                errorMessage += currentLanguage === 'fr-FR'
-                                    ? 'Erreur réseau persistante. Veuillez vérifier votre connexion internet et réessayer.'
-                                    : 'Persistent network error. Please check your internet connection and try again.';
-                            }
+                            errorMessage += 'Microphone access was denied.';
                             break;
                         default:
-                            errorMessage += currentLanguage === 'fr-FR'
-                                ? 'Veuillez réessayer. Si le problème persiste, essayez de rafraîchir la page.'
-                                : 'Please try again. If the problem persists, try refreshing the page.';
+                            errorMessage += 'Please try again.';
                     }
                     addMessage(errorMessage, 'assistant');
                 };
-
-                // Add timeout to prevent hanging
-                recognition.onspeechend = () => {
-                    console.log('Speech ended');
-                    if (isRecording) {
-                        recognition.stop();
-                    }
-                };
-
-                recognition.onaudiostart = () => {
-                    console.log('Audio capturing started');
-                };
-
-                recognition.onaudioend = () => {
-                    console.log('Audio capturing ended');
-                };
-
-                recognition.onsoundstart = () => {
-                    console.log('Sound detected');
-                };
-
-                recognition.onsoundend = () => {
-                    console.log('Sound ended');
-                };
-
             } else {
-                console.error('Speech recognition not supported in this browser');
-                const errorMessage = currentLanguage === 'fr-FR'
-                    ? 'La reconnaissance vocale n\'est pas prise en charge dans votre navigateur. Veuillez utiliser Chrome, Edge ou Safari.'
-                    : 'Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.';
-                addMessage(errorMessage, 'assistant');
+                console.error('Speech recognition not supported');
                 document.getElementById('voiceButton').style.display = 'none';
             }
         }
@@ -791,56 +648,16 @@
                     speaking = false;
                     document.getElementById('speakButton').innerHTML = '<i class="fas fa-volume-up"></i>';
                 }
-
-                // Check internet connection before starting
-                if (!navigator.onLine) {
-                    const errorMessage = currentLanguage === 'fr-FR'
-                        ? 'Pas de connexion internet. Veuillez vérifier votre connexion et réessayer.'
-                        : 'No internet connection. Please check your connection and try again.';
-                    addMessage(errorMessage, 'assistant');
-                    return;
-                }
-
                 try {
-                    // Reset retry count
-                    retryCount = 0;
-                    // Set the recognition language based on the current language
-                    recognition.lang = currentLanguage;
                     recognition.start();
-                    console.log('Starting speech recognition with language:', currentLanguage);
                 } catch (error) {
                     console.error('Error starting speech recognition:', error);
-                    const errorMessage = currentLanguage === 'fr-FR'
-                        ? 'Impossible de démarrer la reconnaissance vocale. Veuillez vérifier les permissions du microphone.'
-                        : 'Unable to start speech recognition. Please check microphone permissions.';
-                    addMessage(errorMessage, 'assistant');
                 }
             }
         }
 
-        // Add online/offline event listeners
-        window.addEventListener('online', () => {
-            console.log('Internet connection restored');
-            const message = currentLanguage === 'fr-FR'
-                ? 'Connexion internet rétablie. Vous pouvez maintenant utiliser la reconnaissance vocale.'
-                : 'Internet connection restored. You can now use voice recognition.';
-            addMessage(message, 'assistant');
-        });
-
-        window.addEventListener('offline', () => {
-            console.log('Internet connection lost');
-            const message = currentLanguage === 'fr-FR'
-                ? 'Connexion internet perdue. La reconnaissance vocale n\'est pas disponible.'
-                : 'Internet connection lost. Voice recognition is not available.';
-            addMessage(message, 'assistant');
-        });
-
-        // Initialize voices when the page loads
-        window.addEventListener('load', () => {
-            console.log('Page loaded, initializing voices...');
-            initVoices();
-            initSpeechRecognition();
-        });
+        // Initialize speech recognition when the page loads
+        window.addEventListener('load', initSpeechRecognition);
     </script>
 
     <!-- Add the speak button to the HTML -->
