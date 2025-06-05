@@ -1,0 +1,40 @@
+{
+    "title": "Semsar Assistant - Your AI Travel Companion",
+    "nav": {
+        "signin": "Sign In",
+        "signup": "Sign Up"
+    },
+    "sidebar": {
+        "quickTips": "Quick Tips",
+        "askMeAbout": "Ask me about:",
+        "bestHotels": "Best Hotels",
+        "attractions": "Attractions",
+        "bestTime": "Best Time",
+        "localCustoms": "Local Customs",
+        "aboutAssistant": "About Assistant",
+        "description": "I'm your AI travel companion, here to help you plan your perfect stay in Morocco. I can assist with:",
+        "capabilities": {
+            "hotels": "Hotel recommendations",
+            "planning": "Travel planning",
+            "insights": "Local insights",
+            "culture": "Cultural information"
+        }
+    },
+    "chat": {
+        "header": "Semsar Assistant",
+        "inputPlaceholder": "Ask me anything about hotels and travel in Morocco...",
+        "welcome": "Hello! I'm Semsar Assistant, your AI travel companion. How can I help you plan your perfect stay in Morocco?",
+        "send": "Send message",
+        "voice": "Start voice input",
+        "listening": "Listening..."
+    },
+    "errors": {
+        "voice": {
+            "noSpeech": "No speech was detected.",
+            "noMic": "No microphone was found.",
+            "denied": "Microphone access was denied.",
+            "generic": "Please try again."
+        },
+        "connection": "I apologize, but I'm having trouble connecting to my brain right now. Please try again in a moment."
+    }
+} 

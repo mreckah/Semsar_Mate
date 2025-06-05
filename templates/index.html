@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semsar Mate - Hotel Search</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #0A2463;
+            --gold: #D4AF37;
+            --white: #FFFFFF;
+            --light-gold: #E5C76B;
+            --navy-light: #1A3B7D;
+        }
+
+        body {
+            background-color: var(--navy);
+            color: var(--white);
+            padding: 20px;
+        }
+        .search-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .hotel-card {
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+            height: 100%;
+            border: 1px solid var(--navy);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: var(--white);
+        }
+        .hotel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .hotel-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-top-left-radius: 0.25rem;
+            border-top-right-radius: 0.25rem;
+        }
+        .card-body {
+            padding: 1.25rem;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--navy);
+            font-weight: bold;
+        }
+        .price-tag {
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .rating {
+            color: var(--gold);
+            font-weight: bold;
+        }
+        .hotel-description {
+            color: var(--navy);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        .hotel-address {
+            color: var(--navy);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .popular-cities {
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+            padding: 0 40px; /* Add padding for scroll buttons */
+            max-width: 800px; /* Limit the container width */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .popular-cities-container {
+            display: flex;
+            overflow-x: hidden; /* Changed from auto to hidden */
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 10px 0;
+            justify-content: flex-start; /* Changed from center to flex-start */
+            gap: 10px; /* Add consistent spacing between buttons */
+            width: 100%; /* Ensure container takes full width */
+        }
+        .popular-cities-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+        .popular-cities .btn {
+            margin: 0;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            min-width: 120px; /* Ensure consistent button width */
+        }
+        .scroll-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--gold);
+            color: var(--navy);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1;
+            font-size: 20px;
+            transition: background-color 0.2s;
+        }
+        .scroll-button:hover {
+            background-color: var(--light-gold);
+        }
+        .scroll-button:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+        .scroll-left {
+            left: 0;
+        }
+        .scroll-right {
+            right: 0;
+        }
+        .section-title {
+            margin: 30px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--gold);
+            color: var(--navy);
+        }
+        /* Modal Styles */
+        .hotel-modal .modal-content {
+            border-radius: 15px;
+            background-color: var(--white);
+        }
+        .hotel-modal .modal-header {
+            background-color: var(--navy);
+            color: var(--white);
+            border-bottom: 2px solid var(--gold);
+        }
+        .hotel-modal .modal-title {
+            color: var(--gold);
+            font-weight: bold;
+        }
+        .hotel-details {
+            padding: 20px;
+            color: var(--navy);
+        }
+        .hotel-info-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--white);
+            border-radius: 10px;
+            border: 1px solid var(--navy);
+        }
+        .hotel-info-section h5 {
+            color: var(--navy);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--gold);
+            padding-bottom: 10px;
+        }
+        #modalHotelName {
+            color: var(--navy);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        #modalHotelPrice {
+            color: var(--gold);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        #modalHotelRating {
+            color: var(--gold);
+            font-weight: bold;
+        }
+        #modalHotelAddress {
+            color: var(--navy);
+            font-size: 1rem;
+        }
+        #modalHotelDescription {
+            color: var(--navy);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        #modalHotelLocation {
+            color: var(--navy);
+            font-size: 1rem;
+        }
+        .hotel-feature {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            color: var(--navy);
+        }
+        .hotel-feature i {
+            color: var(--gold);
+            margin-right: 10px;
+            width: 20px;
+        }
+        .view-details-btn {
+            background-color: var(--gold);
+            color: var(--navy);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+        .view-details-btn:hover {
+            background-color: var(--light-gold);
+        }
+        .amenities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .amenity-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background-color: var(--white);
+            border: 1px solid var(--navy);
+            border-radius: 5px;
+            color: var(--navy);
+        }
+        .amenity-item i {
+            margin-right: 8px;
+            color: var(--gold);
+        }
+        .modal-footer {
+            border-top: 1px solid var(--navy);
+            padding: 15px;
+        }
+        .modal-footer .btn-secondary {
+            background-color: var(--navy);
+            color: var(--white);
+            border: none;
+        }
+        .modal-footer .btn-primary {
+            background-color: var(--gold);
+            color: var(--navy);
+            border: none;
+        }
+        .modal-footer .btn-secondary:hover {
+            background-color: var(--navy-light);
+        }
+        .modal-footer .btn-primary:hover {
+            background-color: var(--light-gold);
+        }
+        /* Auth Modal Styles */
+        .auth-modal .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        .auth-modal .modal-header {
+            background-color: var(--navy);
+            color: var(--white);
+            border-bottom: none;
+            border-radius: 15px 15px 0 0;
+        }
+        .auth-modal .modal-title {
+            font-weight: bold;
+        }
+        .auth-modal .modal-body {
+            padding: 30px;
+        }
+        .auth-modal .form-control {
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+        .auth-modal .btn-primary {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .auth-modal .form-text {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .auth-modal .form-text a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+        .auth-modal .form-text a:hover {
+            text-decoration: underline;
+        }
+        .auth-modal .close {
+            color: var(--white);
+            opacity: 1;
+        }
+        .header-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-welcome {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--gold);
+            font-size: 1.1rem;
+        }
+        
+        .user-welcome span {
+            font-weight: 600;
+            color: var(--white);
+        }
+        
+        .btn-outline-danger {
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-danger:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+        /* Add these new styles for the navbar */
+        .navbar {
+            background-color: var(--navy);
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            color: var(--gold) !important;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .nav-link {
+            color: var(--white) !important;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: var(--gold) !important;
+        }
+        
+        .navbar-nav {
+            align-items: center;
+        }
+        
+        .user-welcome {
+            color: var(--gold);
+            margin-right: 1rem;
+        }
+        
+        .user-welcome span {
+            font-weight: 600;
+            color: var(--white);
+        }
+        
+        .btn-outline-light {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        
+        .btn-outline-light:hover {
+            background-color: var(--gold);
+            color: var(--navy);
+        }
+        .navbar .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+            transition: color 0.2s, background 0.2s, transform 0.2s;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+        }
+        .navbar .nav-link:hover, .navbar .nav-link.active {
+            color: #D4AF37 !important;
+            background: rgba(212,175,55,0.08);
+            transform: translateY(-2px);
+        }
+        .navbar .navbar-brand {
+            color: #D4AF37 !important;
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+        }
+        .navbar .navbar-brand i {
+            font-size: 1.7rem;
+            margin-right: 0.5rem;
+        }
+        .user-welcome {
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .user-welcome i {
+            color: #D4AF37;
+            font-size: 1.2rem;
+            margin-right: 0.3rem;
+        }
+        .navbar .nav-link i {
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg" style="background: #0A2463; box-shadow: 0 2px 10px rgba(10,36,99,0.2);">
+        <div class="container">
+            <a class="navbar-brand" href="/index" style="font-size: 1.5rem; font-weight: bold; color: #D4AF37;">
+                <i class="fas fa-hotel me-2"></i>Semsar Mate
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Toggle navigation menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index" style="color: #fff;">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/search" style="color: #fff;">
+                            <i class="fas fa-search me-1"></i>Search
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/blog" style="color: #fff;">
+                            <i class="fas fa-blog me-1"></i>Blog
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/assistant" style="color: #fff;">
+                            <i class="fas fa-robot me-1"></i>Semsar Assistant
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div class="user-welcome" style="color: #fff; margin-right: 1rem;">
+                        <i class="fas fa-user-circle me-1"></i>Welcome,<span id="userName"> Guest</span>
+                    </div>
+                    <a href="/signout" class="nav-link" style="color: #fff;">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Add Modal for Hotel Details -->
+    <div class="modal fade hotel-modal" id="hotelDetailsModal" tabindex="-1" aria-labelledby="hotelDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="hotelDetailsModalLabel">Hotel Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body hotel-details">
+                    <div class="hotel-info-section">
+                        <h5>Basic Information</h5>
+                        <div id="modalHotelName" class="h4 mb-3"></div>
+                        <div id="modalHotelPrice" class="price-tag mb-2"></div>
+                        <div id="modalHotelRating" class="rating mb-2"></div>
+                        <div id="modalHotelAddress" class="hotel-address"></div>
+                    </div>
+                    
+                    <div class="hotel-info-section">
+                        <h5>Description</h5>
+                        <p id="modalHotelDescription" class="hotel-description"></p>
+                    </div>
+                    
+                    <div class="hotel-info-section">
+                        <h5>Amenities</h5>
+                        <div class="amenities-grid" id="modalHotelAmenities">
+                            <!-- Amenities will be populated dynamically -->
+                        </div>
+                    </div>
+                    
+                    <div class="hotel-info-section">
+                        <h5>Location</h5>
+                        <div id="modalHotelLocation" class="hotel-address"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="bookHotel()">Book Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign In Modal -->
+    <div class="modal fade auth-modal" id="signInModal" tabindex="-1" aria-labelledby="signInModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="signInModalLabel">Sign In to Semsar Mate</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="signInForm">
+                        <div class="mb-3">
+                            <input type="email" class="form-control" id="signInEmail" placeholder="Email" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="password" class="form-control" id="signInPassword" placeholder="Password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Sign In</button>
+                        <p class="form-text">
+                            Don't have an account? <a href="#" onclick="showSignUp(); return false;">Sign Up</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign Up Modal -->
+    <div class="modal fade auth-modal" id="signUpModal" tabindex="-1" aria-labelledby="signUpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="signUpModalLabel">Create Semsar Mate Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="signUpForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="signUpName" placeholder="Full Name" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" id="signUpEmail" placeholder="Email" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="password" class="form-control" id="signUpPassword" placeholder="Password" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="password" class="form-control" id="signUpConfirmPassword" placeholder="Confirm Password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Sign Up</button>
+                        <p class="form-text">
+                            Already have an account? <a href="#" onclick="showSignIn(); return false;">Sign In</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="search-container">
+            <h1 class="text-center mb-4">Hotel Search</h1>
+            
+            <!-- Search Form -->
+            <form id="searchForm" class="mb-4">
+                <div class="input-group">
+                    <input type="text" id="cityInput" class="form-control" placeholder="Enter city name..." required>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </form>
+
+            <!-- Popular Cities -->
+            <div class="popular-cities">
+                <h3 class="section-title">Popular Cities</h3>
+                <button class="scroll-button scroll-left" onclick="scrollCities('left')" title="Scroll left" aria-label="Scroll cities left">
+                    &#10094;
+                </button>
+                <div class="popular-cities-container">
+                    <!-- Moroccan Cities -->
+                    <button class="btn btn-outline-primary" onclick="searchCity('Casablanca')">Casablanca</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('Rabat')">Rabat</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('Agadir')">Agadir</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('Marrakech')">Marrakech</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('Tangier')">Tangier</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('Fes')">Fes</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('Essaouira')">Essaouira</button>
+                    <!-- International Cities -->
+                    <button class="btn btn-outline-primary" onclick="searchCity('Paris')">Paris</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('London')">London</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('New York')">New York</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('Tokyo')">Tokyo</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('Dubai')">Dubai</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('Rome')">Rome</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('Barcelona')">Barcelona</button>
+                    <button class="btn btn-outline-primary" onclick="searchCity('Amsterdam')">Amsterdam</button>
+                </div>
+                <button class="scroll-button scroll-right" onclick="scrollCities('right')" title="Scroll right" aria-label="Scroll cities right">
+                    &#10095;
+                </button>
+            </div>
+            
+            <div class="loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Searching for hotels...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results">
+                <h3 class="section-title">Featured Hotels</h3>
+                <div class="row" id="featuredHotels">
+                    <!-- Featured hotels will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <!-- Add Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Get user name from session
+        function updateUserName() {
+            fetch('/get-user-info')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Not logged in');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.name) {
+                        document.getElementById('userName').textContent = data.name;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    window.location.href = '/signin';
+                });
+        }
+
+        // Call updateUserName when page loads
+        document.addEventListener('DOMContentLoaded', updateUserName);
+
+        // Function to scroll cities
+        function scrollCities(direction) {
+            const container = document.querySelector('.popular-cities-container');
+            const scrollAmount = 300; // Increased scroll amount for better visibility
+            
+            // Get current scroll position
+            const currentScroll = container.scrollLeft;
+            const maxScroll = container.scrollWidth - container.clientWidth;
+            
+            // Calculate new scroll position
+            let newScroll;
+            if (direction === 'left') {
+                newScroll = Math.max(0, currentScroll - scrollAmount);
+            } else {
+                newScroll = Math.min(maxScroll, currentScroll + scrollAmount);
+            }
+            
+            // Smooth scroll to new position
+            container.scrollTo({
+                left: newScroll,
+                behavior: 'smooth'
+            });
+            
+            // Add visual feedback
+            const button = direction === 'left' ? 
+                document.querySelector('.scroll-left') : 
+                document.querySelector('.scroll-right');
+            
+            button.style.backgroundColor = '#D4AF37';
+            setTimeout(() => {
+                button.style.backgroundColor = '#0A2463';
+            }, 200);
+        }
+
+        // Update scroll button visibility based on scroll position
+        function updateScrollButtons() {
+            const container = document.querySelector('.popular-cities-container');
+            const leftButton = document.querySelector('.scroll-left');
+            const rightButton = document.querySelector('.scroll-right');
+            
+            // Show/hide left button
+            leftButton.style.display = container.scrollLeft > 0 ? 'flex' : 'none';
+            
+            // Show/hide right button
+            rightButton.style.display = 
+                container.scrollLeft < (container.scrollWidth - container.clientWidth) ? 'flex' : 'none';
+        }
+
+        // Reset scroll position to start
+        function resetScrollPosition() {
+            const container = document.querySelector('.popular-cities-container');
+            container.scrollLeft = 0;
+            updateScrollButtons();
+        }
+
+        // Add scroll event listener to update button visibility
+        document.querySelector('.popular-cities-container').addEventListener('scroll', updateScrollButtons);
+
+        // Initial setup
+        window.addEventListener('load', function() {
+            // Reset scroll position to start
+            resetScrollPosition();
+            // Search for Casablanca hotels
+            searchCity('Casablanca');
+        });
+
+        // Function to search for a city
+        function searchCity(city) {
+            document.getElementById('cityInput').value = city;
+            document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+        }
+
+        // Handle form submission
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const city = document.getElementById('cityInput').value;
+            searchHotels(city);
+        });
+
+        // Function to search hotels
+        function searchHotels(city) {
+            const loading = document.querySelector('.loading');
+            const results = document.getElementById('results');
+            
+            loading.style.display = 'block';
+            results.innerHTML = '<h3 class="section-title">Search Results</h3><div class="row" id="hotelResults"></div>';
+            
+            fetch('/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `city=${encodeURIComponent(city)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                const hotelResults = document.getElementById('hotelResults');
+                
+                if (data.error) {
+                    hotelResults.innerHTML = `<div class="col-12"><div class="alert alert-warning">${data.error}</div></div>`;
+                    return;
+                }
+                
+                if (data.hotels && data.hotels.length > 0) {
+                    hotelResults.innerHTML = data.hotels.map(hotel => `
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card hotel-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">${hotel.name}</h5>
+                                    ${hotel.price ? `<p class="price-tag">${hotel.price}$</p>` : ''}
+                                    ${hotel.rating ? `<p class="rating">Rating: ${hotel.rating}/10</p>` : ''}
+                                    ${hotel.address ? `<p class="hotel-address">${hotel.address}</p>` : ''}
+                                    ${hotel.description ? `<p class="hotel-description">${hotel.description.substring(0, 100)}...</p>` : ''}
+                                    <button class="view-details-btn" onclick='showHotelDetails(${JSON.stringify(hotel)})'>
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    hotelResults.innerHTML = '<div class="col-12"><div class="alert alert-warning">No hotels found for this city.</div></div>';
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                results.innerHTML = '<div class="alert alert-danger">An error occurred while searching for hotels. Please try again.</div>';
+                console.error('Error:', error);
+            });
+        }
+
+        // Function to show hotel details
+        function showHotelDetails(hotel) {
+            const modal = new bootstrap.Modal(document.getElementById('hotelDetailsModal'));
+            
+            // Populate modal with hotel details
+            document.getElementById('modalHotelName').textContent = hotel.name;
+            document.getElementById('modalHotelPrice').textContent = hotel.price ? `${hotel.price}$` : 'Price not available';
+            document.getElementById('modalHotelRating').textContent = hotel.rating ? `Rating: ${hotel.rating}/10` : 'No rating available';
+            document.getElementById('modalHotelAddress').textContent = hotel.address || 'Address not available';
+            document.getElementById('modalHotelDescription').textContent = hotel.description || 'No description available';
+            document.getElementById('modalHotelLocation').textContent = hotel.address || 'Location not available';
+            
+            // Populate amenities (example amenities - you can modify these)
+            const amenities = [
+                { icon: 'wifi', name: 'Free WiFi' },
+                { icon: 'swimming-pool', name: 'Swimming Pool' },
+                { icon: 'utensils', name: 'Restaurant' },
+                { icon: 'parking', name: 'Free Parking' },
+                { icon: 'concierge-bell', name: '24/7 Front Desk' },
+                { icon: 'bed', name: 'Room Service' }
+            ];
+            
+            document.getElementById('modalHotelAmenities').innerHTML = amenities.map(amenity => `
+                <div class="amenity-item">
+                    <i class="fas fa-${amenity.icon}"></i>
+                    <span>${amenity.name}</span>
+                </div>
+            `).join('');
+            
+            modal.show();
+        }
+
+        // Function to book hotel (placeholder)
+        function bookHotel() {
+            alert('Booking functionality will be implemented soon!');
+        }
+
+        // Auth Functions
+        function showSignIn() {
+            const signInModal = new bootstrap.Modal(document.getElementById('signInModal'));
+            const signUpModal = bootstrap.Modal.getInstance(document.getElementById('signUpModal'));
+            if (signUpModal) {
+                signUpModal.hide();
+            }
+            signInModal.show();
+        }
+
+        function showSignUp() {
+            const signUpModal = new bootstrap.Modal(document.getElementById('signUpModal'));
+            const signInModal = bootstrap.Modal.getInstance(document.getElementById('signInModal'));
+            if (signInModal) {
+                signInModal.hide();
+            }
+            signUpModal.show();
+        }
+
+        // Handle Sign In Form Submission
+        document.getElementById('signInForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('signInEmail').value;
+            const password = document.getElementById('signInPassword').value;
+            
+            // Here you would typically make an API call to your backend
+            console.log('Sign In:', { email, password });
+            alert('Sign In functionality will be implemented with backend integration!');
+        });
+
+        // Handle Sign Up Form Submission
+        document.getElementById('signUpForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('signUpName').value;
+            const email = document.getElementById('signUpEmail').value;
+            const password = document.getElementById('signUpPassword').value;
+            const confirmPassword = document.getElementById('signUpConfirmPassword').value;
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            // Here you would typically make an API call to your backend
+            console.log('Sign Up:', { name, email, password });
+            alert('Sign Up functionality will be implemented with backend integration!');
+        });
+
+        // Add these new functions for the navigation items
+        function showBookings() {
+            alert('My Bookings feature coming soon!');
+        }
+        
+        function showFavorites() {
+            alert('Favorites feature coming soon!');
+        }
+        
+        function showProfile() {
+            alert('Profile feature coming soon!');
+        }
+    </script>
+</body>
+</html> 
