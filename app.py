@@ -167,11 +167,7 @@ def assistant():
 
 if __name__ == '__main__':
     try:
-        # Import CSV data on startup
-        logger.info("Initializing database...")
-        import_csv_data()
-        logger.info("Database initialized successfully")
         app.run(debug=True)
     except Exception as e:
-        logger.error(f"Error during startup: {str(e)}")
+        logger.error(f"Error starting the application: {str(e)}")
         logger.error(traceback.format_exc()) 
