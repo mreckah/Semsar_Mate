@@ -329,27 +329,45 @@
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg">
+    <nav class="navbar navbar-expand-lg" style="background: #0A2463; box-shadow: 0 2px 10px rgba(10,36,99,0.2);">
         <div class="container">
-            <a class="navbar-brand" href="/">
+            <a class="navbar-brand" href="/index" style="font-size: 1.5rem; font-weight: bold; color: #D4AF37;">
                 <i class="fas fa-hotel me-2"></i>Semsar Mate
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Toggle navigation menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/signin">
-                            <i class="fas fa-sign-in-alt me-1"></i>Sign In
+                        <a class="nav-link" href="/index" style="color: #fff;">
+                            <i class="fas fa-home me-1"></i>Home
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/signup">
-                            <i class="fas fa-user-plus me-1"></i>Sign Up
+                        <a class="nav-link" href="/search" style="color: #fff;">
+                            <i class="fas fa-search me-1"></i>Search
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/blog" style="color: #fff;">
+                            <i class="fas fa-blog me-1"></i>Blog
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/assistant" style="color: #fff;">
+                            <i class="fas fa-robot me-1"></i>Semsar Assistant
                         </a>
                     </li>
                 </ul>
+                <div class="d-flex align-items-center">
+                    <div class="user-welcome" style="color: #fff; margin-right: 1rem;">
+                        <i class="fas fa-user-circle me-1"></i>Welcome,<span id="userName"> Guest</span>
+                    </div>
+                    <a href="/signout" class="nav-link" style="color: #fff;">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
@@ -414,6 +432,29 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Get user name from session
+        function updateUserName() {
+            fetch('/get-user-info')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Not logged in');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.name) {
+                        document.getElementById('userName').textContent = ' ' + data.name;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Optionally redirect to signin or keep as Guest
+                });
+        }
+
+        // Call updateUserName when page loads
+        document.addEventListener('DOMContentLoaded', updateUserName);
+
         // Configuration
         const OPENROUTER_API_KEY = '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';
         const API_CONFIG = {
