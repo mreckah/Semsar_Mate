@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -720,6 +720,101 @@
             background: var(--gold);
             color: var(--navy);
         }
+
+        .voice-agent-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .voice-agent-btn {
+            width: 60px;
+            height: 60px;
+            background-color: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .voice-agent-btn:hover {
+            transform: scale(1.1);
+            background-color: var(--light-gold);
+        }
+
+        .voice-agent-btn.active {
+            background-color: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-agent-btn i {
+            color: var(--navy);
+            font-size: 24px;
+        }
+
+        .voice-agent-input {
+            display: none;
+            background: white;
+            border-radius: 25px;
+            padding: 5px 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .voice-agent-input.active {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .voice-agent-input input {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 200px;
+            font-size: 14px;
+            color: var(--navy);
+        }
+
+        .voice-agent-input input::placeholder {
+            color: #999;
+        }
+
+        .send-command-btn {
+            background: none;
+            border: none;
+            color: var(--gold);
+            cursor: pointer;
+            padding: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .send-command-btn:hover {
+            color: var(--light-gold);
+            transform: scale(1.1);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+            }
+            70% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -798,7 +893,7 @@
             <div class="chat-header">
                 <div class="assistant-info">
                     <div class="assistant-avatar">
-                        <i class="fas fa-robot"></i>
+                <i class="fas fa-robot"></i>
                     </div>
                     <div class="assistant-title">
                         <h2>Semsar Assistant</h2>
@@ -869,12 +964,12 @@
                     </button>
                 </div>
                 <div class="input-actions">
-                    <button onclick="sendMessage()" title="Send message">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                    <button id="voiceButton" onclick="toggleVoiceInput()" title="Start voice input">
-                        <i class="fas fa-microphone"></i>
-                    </button>
+                <button onclick="sendMessage()" title="Send message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+                <button id="voiceButton" onclick="toggleVoiceInput()" title="Start voice input">
+                    <i class="fas fa-microphone"></i>
+                </button>
                 </div>
                 <div id="voiceStatus" class="voice-status">
                     <i class="fas fa-microphone"></i>
@@ -923,6 +1018,19 @@
         </div>
     </div>
 
+    <!-- Voice Agent Button and Input -->
+    <div class="voice-agent-container">
+        <div class="voice-agent-btn" id="voiceAgentBtn" title="Voice Assistant">
+            <i class="fas fa-microphone"></i>
+        </div>
+        <div class="voice-agent-input" id="voiceAgentInput">
+            <input type="text" placeholder="Type your command..." id="commandInput">
+            <button class="send-command-btn" id="sendCommandBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Get user name from session
@@ -949,7 +1057,6 @@
         document.addEventListener('DOMContentLoaded', updateUserName);
 
         // Configuration
-        const OPENROUTER_API_KEY = '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';
         const API_CONFIG = {
             model: 'anthropic/claude-3-haiku:beta',
             max_tokens: 300,
@@ -1133,52 +1240,35 @@
         async function sendMessage() {
             const input = document.getElementById('user-input');
             const message = input.value.trim();
-            
+
             if (!message) return;
 
             addMessage(message, 'user');
             input.value = '';
 
             try {
-                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                const response = await fetch('/assistant', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-                        'HTTP-Referer': window.location.origin,
-                        'X-Title': 'Semsar Mate'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        model: API_CONFIG.model,
-                        max_tokens: API_CONFIG.max_tokens,
-                        messages: [
-                            {
-                                role: 'system',
-                                content: API_CONFIG.system_prompt
-                            },
-                            {
-                                role: 'user',
-                                content: message
-                            }
-                        ]
+                        message: message
                     })
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error('API Error:', errorData);
-                    throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
-                if (!data.choices || !data.choices[0]?.message?.content) {
-                    console.error('Invalid API Response:', data);
-                    throw new Error('Invalid response format from API');
+                if (data.error) {
+                    throw new Error(data.error);
                 }
 
-                const aiResponse = data.choices[0].message.content;
+                const aiResponse = data.response;
                 addMessage(aiResponse, 'assistant');
-                
+
                 // Auto-speak the response
                 speakText(aiResponse);
             } catch (error) {
@@ -1411,6 +1501,169 @@
         // Add event listeners for filters
         document.getElementById('bookingStatusFilter').addEventListener('change', loadBookings);
         document.getElementById('bookingSearch').addEventListener('input', loadBookings);
+
+        // Voice Agent Functionality
+        const voiceAgentBtn = document.getElementById('voiceAgentBtn');
+        const voiceAgentInput = document.getElementById('voiceAgentInput');
+        const commandInput = document.getElementById('commandInput');
+        const sendCommandBtn = document.getElementById('sendCommandBtn');
+        let agentRecognition = null;
+        let isAgentListening = false;
+
+        // Initialize speech recognition for the agent
+        function initAgentRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                agentRecognition = new webkitSpeechRecognition();
+                agentRecognition.continuous = true;
+                agentRecognition.interimResults = false;
+                agentRecognition.lang = 'en-US';
+
+                agentRecognition.onstart = () => {
+                    isAgentListening = true;
+                    voiceAgentBtn.classList.add('active');
+                    voiceAgentInput.classList.add('active');
+                    localStorage.setItem('agentActive', 'true');
+                    speakResponse('Agent Mode Activated');
+                };
+
+                agentRecognition.onresult = (event) => {
+                    const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
+                    handleAgentCommand(command);
+                };
+
+                agentRecognition.onerror = (event) => {
+                    console.error('Agent recognition error:', event.error);
+                    if (event.error === 'no-speech') {
+                        agentRecognition.start();
+                    } else {
+                        stopAgentListening();
+                    }
+                };
+
+                agentRecognition.onend = () => {
+                    if (isAgentListening) {
+                        agentRecognition.start();
+                    }
+                };
+            } else {
+                alert('Speech recognition is not supported in your browser.');
+            }
+        }
+
+        function startAgentListening() {
+            if (!agentRecognition) {
+                initAgentRecognition();
+            }
+            if (agentRecognition) {
+                agentRecognition.start();
+            }
+        }
+
+        function stopAgentListening() {
+            if (agentRecognition) {
+                agentRecognition.stop();
+            }
+            isAgentListening = false;
+            voiceAgentBtn.classList.remove('active');
+            voiceAgentInput.classList.remove('active');
+            commandInput.value = '';
+            localStorage.setItem('agentActive', 'false');
+            speakResponse('Agent Mode Deactivated');
+        }
+
+        function handleAgentCommand(command) {
+            // Scroll commands
+            if (command.includes('scroll up')) {
+                window.scrollBy(0, -300);
+                speakResponse('Scrolling up');
+            } else if (command.includes('scroll down')) {
+                window.scrollBy(0, 300);
+                speakResponse('Scrolling down');
+            } else if (command.includes('scroll to top')) {
+                window.scrollTo(0, 0);
+                speakResponse('Scrolling to top');
+            } else if (command.includes('scroll to bottom')) {
+                window.scrollTo(0, document.body.scrollHeight);
+                speakResponse('Scrolling to bottom');
+            }
+            // Navigation commands
+            else if (command.includes('go to home')) {
+                localStorage.setItem('agentActive', 'true'); // Keep agent active during navigation
+                window.location.href = '/index';
+                speakResponse('Navigating to home');
+            } else if (command.includes('go to blog')) {
+                localStorage.setItem('agentActive', 'true'); // Keep agent active during navigation
+                window.location.href = '/blog';
+                speakResponse('Navigating to blog');
+            }
+            // Language commands
+            else if (command.includes('switch to english')) {
+                document.getElementById('languageDropdown').textContent = 'English';
+                speakResponse('Switching to English');
+            } else if (command.includes('switch to french')) {
+                document.getElementById('languageDropdown').textContent = 'French';
+                speakResponse('Switching to French');
+            } else if (command.includes('switch to darija')) {
+                document.getElementById('languageDropdown').textContent = 'Darija';
+                speakResponse('Switching to Darija');
+            }
+            // Help command
+            else if (command.includes('help') || command.includes('what can you do')) {
+                speakResponse('I can help you scroll, navigate to different pages, and switch languages. Just tell me what you want to do.');
+            }
+            // Deactivation command
+            else if (command.includes('deactivate') || command.includes('stop listening')) {
+                stopAgentListening();
+            }
+            // Unknown command
+            else {
+                speakResponse('Sorry, I did not understand that command. Say help to know what I can do.');
+            }
+        }
+
+        function speakResponse(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Event Listeners for the agent
+        voiceAgentBtn.addEventListener('click', () => {
+            if (!isAgentListening) {
+                startAgentListening();
+            } else {
+                stopAgentListening();
+            }
+        });
+
+        sendCommandBtn.addEventListener('click', () => {
+            const command = commandInput.value.toLowerCase();
+            if (command) {
+                handleAgentCommand(command);
+                commandInput.value = '';
+            }
+        });
+
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const command = commandInput.value.toLowerCase();
+                if (command) {
+                    handleAgentCommand(command);
+                    commandInput.value = '';
+                }
+            }
+        });
+
+        // Initialize agent on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initAgentRecognition();
+            // Check if agent was active on previous page
+            if (localStorage.getItem('agentActive') === 'true') {
+                startAgentListening();
+            }
+        });
     </script>
 
     <!-- Add the speak button to the HTML -->

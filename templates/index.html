@@ -261,23 +261,23 @@
             margin-bottom: 2rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
+        
         .navbar-brand {
             color: var(--gold) !important;
             font-size: 1.5rem;
             font-weight: bold;
         }
-
+        
         .nav-link {
             color: var(--white) !important;
             margin: 0 10px;
             transition: color 0.3s ease;
         }
-
+        
         .nav-link:hover {
             color: var(--gold) !important;
         }
-
+        
         /* User Welcome Section */
         .user-welcome {
             display: flex;
@@ -286,12 +286,12 @@
             color: var(--gold);
             font-size: 1.1rem;
         }
-
+        
         .user-welcome span {
             font-weight: 600;
             color: var(--white);
         }
-
+        
         /* Notification Styles */
         .notification {
             position: fixed;
@@ -669,6 +669,103 @@
             color: #ddd;
             margin-bottom: 15px;
         }
+
+        /* Voice Agent Styles */
+        .voice-agent-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .voice-agent-btn {
+            width: 60px;
+            height: 60px;
+            background-color: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .voice-agent-btn:hover {
+            transform: scale(1.1);
+            background-color: var(--light-gold);
+        }
+
+        .voice-agent-btn.active {
+            background-color: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-agent-btn i {
+            color: var(--navy);
+            font-size: 24px;
+        }
+
+        .voice-agent-input {
+            display: none;
+            background: white;
+            border-radius: 25px;
+            padding: 5px 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .voice-agent-input.active {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .voice-agent-input input {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 200px;
+            font-size: 14px;
+            color: var(--navy);
+        }
+
+        .voice-agent-input input::placeholder {
+            color: #999;
+        }
+
+        .send-command-btn {
+            background: none;
+            border: none;
+            color: var(--gold);
+            cursor: pointer;
+            padding: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .send-command-btn:hover {
+            color: var(--light-gold);
+            transform: scale(1.1);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+            }
+            70% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -925,6 +1022,19 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Voice Agent Button and Input -->
+    <div class="voice-agent-container">
+        <div class="voice-agent-btn" id="voiceAgentBtn" title="Voice Assistant">
+            <i class="fas fa-microphone"></i>
+        </div>
+        <div class="voice-agent-input" id="voiceAgentInput">
+            <input type="text" placeholder="Type your command..." id="commandInput">
+            <button class="send-command-btn" id="sendCommandBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
 
@@ -1331,6 +1441,176 @@
             // Implement booking details view
             console.log('Viewing booking:', bookingRef);
         }
+
+        // Voice Agent Functionality
+        const voiceAgentBtn = document.getElementById('voiceAgentBtn');
+        const voiceAgentInput = document.getElementById('voiceAgentInput');
+        const commandInput = document.getElementById('commandInput');
+        const sendCommandBtn = document.getElementById('sendCommandBtn');
+
+        let isAgentListening = false;
+        let agentRecognition = null;
+
+        function initAgentRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                agentRecognition = new webkitSpeechRecognition();
+                agentRecognition.continuous = true;
+                agentRecognition.interimResults = false;
+                agentRecognition.lang = 'en-US';
+
+                agentRecognition.onstart = () => {
+                    isAgentListening = true;
+                    voiceAgentBtn.classList.add('active');
+                    voiceAgentInput.classList.add('active');
+                };
+
+                agentRecognition.onend = () => {
+                    if (isAgentListening) {
+                        // Restart recognition if it was supposed to be listening
+                        setTimeout(() => {
+                            if (isAgentListening) {
+                                agentRecognition.start();
+                            }
+                        }, 100);
+                    }
+                };
+
+                agentRecognition.onresult = (event) => {
+                    const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
+                    commandInput.value = command;
+                    handleAgentCommand(command);
+                };
+
+                agentRecognition.onerror = (event) => {
+                    console.error('Agent recognition error:', event.error);
+                };
+            }
+        }
+
+        function startAgentListening() {
+            if (agentRecognition && !isAgentListening) {
+                isAgentListening = true;
+                voiceAgentBtn.classList.add('active');
+                voiceAgentInput.classList.add('active');
+                agentRecognition.start();
+                speakResponse('Voice agent activated. How can I help you?');
+            }
+        }
+
+        function stopAgentListening() {
+            if (agentRecognition && isAgentListening) {
+                isAgentListening = false;
+                voiceAgentBtn.classList.remove('active');
+                voiceAgentInput.classList.remove('active');
+                agentRecognition.stop();
+                speakResponse('Voice agent deactivated');
+                localStorage.removeItem('agentActive');
+            }
+        }
+
+        function handleAgentCommand(command) {
+            command = command.toLowerCase();
+
+            // Scrolling commands
+            if (command.includes('scroll up')) {
+                window.scrollBy(0, -300);
+                speakResponse('Scrolling up');
+            } else if (command.includes('scroll down')) {
+                window.scrollBy(0, 300);
+                speakResponse('Scrolling down');
+            } else if (command.includes('scroll to top')) {
+                window.scrollTo(0, 0);
+                speakResponse('Scrolling to top');
+            } else if (command.includes('scroll to bottom')) {
+                window.scrollTo(0, document.body.scrollHeight);
+                speakResponse('Scrolling to bottom');
+            }
+            // Navigation commands
+            else if (command.includes('go to assistant')) {
+                localStorage.setItem('agentActive', 'true');
+                window.location.href = '/assistant';
+                speakResponse('Navigating to assistant');
+            } else if (command.includes('go to blog')) {
+                localStorage.setItem('agentActive', 'true');
+                window.location.href = '/blog';
+                speakResponse('Navigating to blog');
+            }
+            // Search commands
+            else if (command.includes('search for')) {
+                const city = command.replace('search for', '').trim();
+                if (city) {
+                    document.getElementById('cityInput').value = city;
+                    searchHotels(city);
+                    speakResponse(`Searching for hotels in ${city}`);
+                }
+            }
+            // City search commands
+            else if (command.includes('casablanca')) {
+                searchCity('Casablanca');
+                speakResponse('Searching hotels in Casablanca');
+            } else if (command.includes('marrakech')) {
+                searchCity('Marrakech');
+                speakResponse('Searching hotels in Marrakech');
+            } else if (command.includes('rabat')) {
+                searchCity('Rabat');
+                speakResponse('Searching hotels in Rabat');
+            }
+            // Help command
+            else if (command.includes('help') || command.includes('what can you do')) {
+                speakResponse('I can help you scroll, search for hotels, navigate to different pages, and search specific cities. Just tell me what you want to do.');
+            }
+            // Deactivation command
+            else if (command.includes('deactivate') || command.includes('stop listening')) {
+                stopAgentListening();
+            }
+            // Unknown command
+            else {
+                speakResponse('Sorry, I did not understand that command. Say help to know what I can do.');
+            }
+        }
+
+        function speakResponse(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Event Listeners for the voice agent
+        voiceAgentBtn.addEventListener('click', () => {
+            if (!isAgentListening) {
+                startAgentListening();
+            } else {
+                stopAgentListening();
+            }
+        });
+
+        sendCommandBtn.addEventListener('click', () => {
+            const command = commandInput.value.toLowerCase();
+            if (command) {
+                handleAgentCommand(command);
+                commandInput.value = '';
+            }
+        });
+
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const command = commandInput.value.toLowerCase();
+                if (command) {
+                    handleAgentCommand(command);
+                    commandInput.value = '';
+                }
+            }
+        });
+
+        // Initialize agent on page load and check if it was active on previous page
+        document.addEventListener('DOMContentLoaded', () => {
+            initAgentRecognition();
+            if (localStorage.getItem('agentActive') === 'true') {
+                startAgentListening();
+            }
+        });
     </script>
 </body>
 </html> 

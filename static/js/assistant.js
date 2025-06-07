@@ -1,5 +1,4 @@
 // Configuration
-const OPENROUTER_API_KEY = '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';
 const API_CONFIG = {
     model: 'anthropic/claude-3-haiku:beta',
     max_tokens: 300,
@@ -211,45 +210,28 @@ async function sendMessage() {
     input.value = '';
 
     try {
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch('/assistant', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-                'HTTP-Referer': window.location.origin,
-                'X-Title': 'Semsar Mate'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: API_CONFIG.model,
-                max_tokens: API_CONFIG.max_tokens,
-                messages: [
-                    {
-                        role: 'system',
-                        content: API_CONFIG.system_prompt
-                    },
-                    {
-                        role: 'user',
-                        content: message
-                    }
-                ]
+                message: message
             })
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error('API Error:', errorData);
-            throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        if (!data.choices || !data.choices[0]?.message?.content) {
-            console.error('Invalid API Response:', data);
-            throw new Error('Invalid response format from API');
+        if (data.error) {
+            throw new Error(data.error);
         }
 
-        const aiResponse = data.choices[0].message.content;
+        const aiResponse = data.response;
         addMessage(aiResponse, 'assistant');
-        
+
         // Auto-speak the response
         speakText(aiResponse);
     } catch (error) {
