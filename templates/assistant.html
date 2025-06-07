@@ -38,11 +38,39 @@
         .nav-link {
             color: var(--white) !important;
             transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
         }
 
         .nav-link:hover {
             color: var(--gold) !important;
             transform: translateY(-2px);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .nav-link.active {
+            color: var(--gold) !important;
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .user-welcome {
+            color: var(--white);
+            margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-welcome i {
+            color: var(--gold);
+        }
+
+        .navbar-toggler {
+            border-color: var(--gold);
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(212, 175, 55, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
 
         .assistant-container {
@@ -82,12 +110,98 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            flex-shrink: 0; /* Prevent header from shrinking */
+            flex-shrink: 0;
+            border-bottom: 2px solid var(--gold);
         }
 
-        .chat-header i {
+        .chat-header .assistant-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .chat-header .assistant-avatar {
+            width: 45px;
+            height: 45px;
+            background: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 1.5rem;
+            color: var(--navy);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .chat-header .assistant-title {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header .assistant-title h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .chat-header .assistant-title .status {
+            font-size: 0.9rem;
             color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chat-header .status .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4CAF50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: auto;
+        }
+
+        .header-action-btn {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .header-action-btn:hover {
+            background: var(--gold);
+            color: var(--navy);
+        }
+
+        .header-action-btn i {
+            font-size: 1rem;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .chat-messages {
@@ -125,6 +239,8 @@
             display: flex;
             gap: 1rem;
             max-width: 80%;
+            position: relative;
+            margin-bottom: 1.5rem;
         }
 
         .message.user {
@@ -142,6 +258,16 @@
             background: var(--navy);
             color: var(--gold);
             font-size: 1.2rem;
+            flex-shrink: 0; /* Prevent avatar from shrinking */
+        }
+
+        .message-avatar i {
+            font-size: 1.2rem; /* Fixed icon size */
+            width: 1.2rem; /* Fixed width */
+            height: 1.2rem; /* Fixed height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .message-content {
@@ -149,11 +275,61 @@
             border-radius: 15px;
             background: var(--navy-light);
             color: var(--navy);
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .message.user .message-content {
             background: var(--navy);
             color: white;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.25rem;
+            text-align: right;
+        }
+
+        .message.user .message-time {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .message-actions {
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .message:hover .message-actions {
+            opacity: 1;
+        }
+
+        .message-action-btn {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            color: var(--navy);
+        }
+
+        .message-action-btn:hover {
+            background: var(--navy);
+            color: white;
+            border-color: var(--navy);
         }
 
         .chat-input {
@@ -162,7 +338,8 @@
             border-top: 1px solid #eee;
             display: flex;
             gap: 1rem;
-            flex-shrink: 0; /* Prevent input from shrinking */
+            flex-shrink: 0;
+            position: relative;
         }
 
         .chat-input input {
@@ -172,11 +349,17 @@
             border-radius: 25px;
             outline: none;
             transition: all 0.3s ease;
+            font-size: 1rem;
         }
 
         .chat-input input:focus {
             border-color: var(--navy);
             box-shadow: 0 0 0 2px var(--navy-light);
+        }
+
+        .chat-input .input-actions {
+            display: flex;
+            gap: 0.5rem;
         }
 
         .chat-input button {
@@ -190,6 +373,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
+            font-size: 1.1rem;
         }
 
         .chat-input button:hover {
@@ -202,16 +386,41 @@
             animation: pulse 1.5s infinite;
         }
 
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
-            100% {
-                transform: scale(1);
-            }
+        .chat-input .input-tools {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            padding: 0.5rem;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 1rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .chat-input input:focus + .input-tools {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .input-tool-btn {
+            background: none;
+            border: none;
+            color: var(--navy);
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .input-tool-btn:hover {
+            background: var(--navy-light);
+            color: var(--navy);
         }
 
         .voice-status {
@@ -325,46 +534,232 @@
         .speak-button i {
             font-size: 1.2rem;
         }
+
+        /* My Bookings Styles */
+        .bookings-container {
+            padding: 20px;
+        }
+
+        .booking-card {
+            background: var(--white);
+            border: 1px solid var(--navy-light);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .booking-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--navy-light);
+        }
+
+        .booking-ref {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .booking-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status-upcoming {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-past {
+            background-color: #f5f5f5;
+            color: #616161;
+        }
+
+        .status-cancelled {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+
+        .booking-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .booking-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .booking-info-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .booking-info-value {
+            font-weight: 500;
+            color: var(--navy);
+        }
+
+        .booking-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .booking-actions button {
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #d32f2f;
+        }
+
+        .btn-cancel:hover {
+            background-color: #d32f2f;
+            color: white;
+        }
+
+        .btn-view {
+            background-color: var(--navy-light);
+            color: white;
+            border: none;
+        }
+
+        .btn-view:hover {
+            background-color: var(--navy);
+        }
+
+        .no-bookings {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .no-bookings i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        .language-toggle .btn {
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            transition: all 0.3s ease;
+        }
+
+        .language-toggle .btn:hover {
+            background: var(--gold);
+            color: var(--navy);
+        }
+
+        .language-toggle .btn.active {
+            background: var(--gold);
+            color: var(--navy);
+        }
+
+        .language-dropdown .btn {
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+
+        .language-dropdown .btn:hover,
+        .language-dropdown .btn:focus {
+            background: var(--gold);
+            color: var(--navy);
+            border-color: var(--gold);
+        }
+
+        .language-dropdown .dropdown-menu {
+            background: var(--navy);
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            margin-top: 8px;
+            padding: 8px;
+        }
+
+        .language-dropdown .dropdown-item {
+            color: var(--white);
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .language-dropdown .dropdown-item:hover {
+            background: var(--gold);
+            color: var(--navy);
+        }
+
+        .language-dropdown .dropdown-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .language-dropdown .dropdown-item.active {
+            background: var(--gold);
+            color: var(--navy);
+        }
     </style>
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg" style="background: #0A2463; box-shadow: 0 2px 10px rgba(10,36,99,0.2);">
+    <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="/index" style="font-size: 1.5rem; font-weight: bold; color: #D4AF37;">
+            <a class="navbar-brand" href="/index">
                 <i class="fas fa-hotel me-2"></i>Semsar Mate
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Toggle navigation menu">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/index" style="color: #fff;">
+                        <a class="nav-link" href="/index">
                             <i class="fas fa-home me-1"></i>Home
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/search" style="color: #fff;">
-                            <i class="fas fa-search me-1"></i>Search
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/blog" style="color: #fff;">
+                        <a class="nav-link" href="/blog">
                             <i class="fas fa-blog me-1"></i>Blog
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/assistant" style="color: #fff;">
+                        <a class="nav-link active" href="/assistant">
                             <i class="fas fa-robot me-1"></i>Semsar Assistant
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showMyBookings()">
+                            <i class="fas fa-calendar-check me-1"></i>My Bookings
                         </a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center">
-                    <div class="user-welcome" style="color: #fff; margin-right: 1rem;">
+                    <div class="user-welcome">
                         <i class="fas fa-user-circle me-1"></i>Welcome,<span id="userName"> Guest</span>
                     </div>
-                    <a href="/signout" class="nav-link" style="color: #fff;">
+                    <a href="/signout" class="nav-link">
                         <i class="fas fa-sign-out-alt me-1"></i>Logout
                     </a>
                 </div>
@@ -401,8 +796,37 @@
         <!-- Main Chat Area -->
         <div class="chat-main">
             <div class="chat-header">
-                <i class="fas fa-robot"></i>
-                <h2 class="mb-0">Semsar Assistant</h2>
+                <div class="assistant-info">
+                    <div class="assistant-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="assistant-title">
+                        <h2>Semsar Assistant</h2>
+                        <div class="status">
+                            <span class="status-dot"></span>
+                            <span>Online</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <div class="language-dropdown ms-auto">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-globe me-2"></i>
+                            <span id="currentLanguage">English</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('en')">
+                                <i class="fas fa-flag-usa me-2"></i>English
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('darija')">
+                                <i class="fas fa-mosque me-2"></i>Darija
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('fr')">
+                                <i class="fas fa-flag me-2"></i>Français
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             <div class="chat-messages" id="chat-messages">
                 <div class="message">
@@ -411,20 +835,81 @@
                     </div>
                     <div class="message-content">
                         Hello! I'm Semsar Assistant, your AI travel companion. How can I help you plan your perfect stay in Morocco?
+                        <div class="message-time">Just now</div>
+                    </div>
+                    <div class="message-actions">
+                        <button class="message-action-btn" title="Copy message">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="message-action-btn" title="Speak message">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
                     </div>
                 </div>
             </div>
             <div class="chat-input">
                 <input type="text" id="user-input" placeholder="Ask me anything about hotels and travel in Morocco..." onkeypress="handleKeyPress(event)">
-                <button onclick="sendMessage()" title="Send message">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-                <button id="voiceButton" onclick="toggleVoiceInput()" title="Start voice input">
-                    <i class="fas fa-microphone"></i>
-                </button>
+                <div class="input-tools">
+                    <button class="input-tool-btn" title="Add emoji">
+                        <i class="far fa-smile"></i>
+                    </button>
+                    <button class="input-tool-btn" title="Upload image">
+                        <i class="far fa-image"></i>
+                    </button>
+                    <button class="input-tool-btn" title="Share location">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </button>
+                </div>
+                <div class="input-actions">
+                    <button onclick="sendMessage()" title="Send message">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                    <button id="voiceButton" onclick="toggleVoiceInput()" title="Start voice input">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                </div>
                 <div id="voiceStatus" class="voice-status">
                     <i class="fas fa-microphone"></i>
                     <span>Listening...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Bookings Modal -->
+    <div class="modal fade" id="myBookingsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">My Bookings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" title="Close modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="bookings-container">
+                        <div class="bookings-filters mb-4">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <select class="form-select" id="bookingStatusFilter" title="Filter bookings by status">
+                                        <option value="all">All Bookings</option>
+                                        <option value="upcoming">Upcoming</option>
+                                        <option value="past">Past</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" id="bookingSearch" placeholder="Search bookings...">
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-primary w-100" onclick="refreshBookings()">
+                                        <i class="fas fa-sync-alt me-2"></i>Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="bookingsList" class="bookings-list">
+                            <!-- Bookings will be loaded here -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -463,6 +948,65 @@
             system_prompt: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Keep responses concise and focused on hotel recommendations and travel advice.'
         };
 
+        // Language state
+        let currentLanguage = 'en';
+        const languageConfig = {
+            en: {
+                name: 'English',
+                code: 'en-US',
+                systemPrompt: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Keep responses concise and focused on hotel recommendations and travel advice.'
+            },
+            darija: {
+                name: 'Darija',
+                code: 'ar-MA',
+                systemPrompt: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Respond in Moroccan Darija (Moroccan Arabic). Keep responses concise and focused on hotel recommendations and travel advice.'
+            },
+            fr: {
+                name: 'Français',
+                code: 'fr-FR',
+                systemPrompt: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Respond in French. Keep responses concise and focused on hotel recommendations and travel advice.'
+            }
+        };
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            const languageText = document.getElementById('currentLanguage');
+            
+            // Update button text
+            languageText.textContent = languageConfig[currentLanguage].name;
+            
+            // Update active state in dropdown
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('onclick').includes(lang)) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Update recognition language
+            if (recognition) {
+                recognition.lang = languageConfig[currentLanguage].code;
+            }
+            
+            // Update API config
+            API_CONFIG.system_prompt = languageConfig[currentLanguage].systemPrompt;
+            
+            // Show confirmation message
+            let message;
+            switch(currentLanguage) {
+                case 'en':
+                    message = 'Switched to English. How can I help you?';
+                    break;
+                case 'darija':
+                    message = 'تم التحويل إلى الدارجة. كيف يمكنني مساعدتك؟';
+                    break;
+                case 'fr':
+                    message = 'Passé au français. Comment puis-je vous aider?';
+                    break;
+            }
+            addMessage(message, 'assistant');
+        }
+
         // Speech Synthesis
         let speechSynthesis = window.speechSynthesis;
         let speaking = false;
@@ -477,10 +1021,14 @@
             utterance.rate = 1.0;
             utterance.pitch = 1.0;
             utterance.volume = 1.0;
+            utterance.lang = languageConfig[currentLanguage].code;
 
             // Get available voices and set a preferred voice
             const voices = speechSynthesis.getVoices();
-            const preferredVoice = voices.find(voice => voice.lang === 'en-US') || voices[0];
+            const preferredVoice = voices.find(voice => 
+                voice.lang === languageConfig[currentLanguage].code
+            ) || voices[0];
+            
             if (preferredVoice) {
                 utterance.voice = preferredVoice;
             }
@@ -526,6 +1074,54 @@
         }
 
         // Message Handling
+        function addMessage(content, sender) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const avatar = sender === 'user' ? 
+                '<div class="message-avatar"><i class="fas fa-user"></i></div>' :
+                '<div class="message-avatar"><i class="fas fa-robot"></i></div>';
+
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                ${avatar}
+                <div class="message-content">
+                    ${content}
+                    <div class="message-time">${time}</div>
+                </div>
+                <div class="message-actions">
+                    <button class="message-action-btn" onclick="copyMessage(this)" title="Copy message">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <button class="message-action-btn" onclick="speakMessage(this)" title="Speak message">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function copyMessage(button) {
+            const messageContent = button.closest('.message').querySelector('.message-content').textContent;
+            navigator.clipboard.writeText(messageContent).then(() => {
+                // Show copy confirmation
+                const originalIcon = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    button.innerHTML = originalIcon;
+                }, 2000);
+            });
+        }
+
+        function speakMessage(button) {
+            const messageContent = button.closest('.message').querySelector('.message-content').textContent;
+            speakText(messageContent);
+        }
+
         async function sendMessage() {
             const input = document.getElementById('user-input');
             const message = input.value.trim();
@@ -584,26 +1180,6 @@
             }
         }
 
-        function addMessage(content, sender) {
-            const chatMessages = document.getElementById('chat-messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
-            
-            const avatar = sender === 'user' ? 
-                '<div class="message-avatar"><i class="fas fa-user"></i></div>' :
-                '<div class="message-avatar"><i class="fas fa-robot"></i></div>';
-
-            messageDiv.innerHTML = `
-                ${avatar}
-                <div class="message-content">
-                    ${content}
-                </div>
-            `;
-            
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
         // Initialize speech synthesis
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = () => {
@@ -621,7 +1197,7 @@
                 recognition = new webkitSpeechRecognition();
                 recognition.continuous = false;
                 recognition.interimResults = false;
-                recognition.lang = 'en-US';
+                recognition.lang = languageConfig[currentLanguage].code;
 
                 recognition.onstart = () => {
                     isRecording = true;
@@ -699,6 +1275,134 @@
 
         // Initialize speech recognition when the page loads
         window.addEventListener('load', initSpeechRecognition);
+
+        // My Bookings Functions
+        function showMyBookings() {
+            const modal = new bootstrap.Modal(document.getElementById('myBookingsModal'));
+            loadBookings();
+            modal.show();
+        }
+
+        function loadBookings() {
+            const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            const bookingsList = document.getElementById('bookingsList');
+            const statusFilter = document.getElementById('bookingStatusFilter').value;
+            const searchTerm = document.getElementById('bookingSearch').value.toLowerCase();
+            
+            // Filter bookings based on status and search term
+            let filteredBookings = bookings;
+            
+            if (statusFilter !== 'all') {
+                filteredBookings = filteredBookings.filter(booking => getBookingStatus(booking) === statusFilter);
+            }
+            
+            if (searchTerm) {
+                filteredBookings = filteredBookings.filter(booking => 
+                    booking.hotelName.toLowerCase().includes(searchTerm) ||
+                    booking.ref.toLowerCase().includes(searchTerm) ||
+                    booking.roomType.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (filteredBookings.length === 0) {
+                bookingsList.innerHTML = `
+                    <div class="no-bookings">
+                        <i class="fas fa-calendar-times"></i>
+                        <h4>No Bookings Found</h4>
+                        <p>${searchTerm ? `No bookings found matching "${searchTerm}"` : 'You haven\'t made any bookings yet.'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort bookings by check-in date
+            filteredBookings.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
+
+            bookingsList.innerHTML = filteredBookings.map(booking => {
+                const status = getBookingStatus(booking);
+                return `
+                    <div class="booking-card">
+                        <div class="booking-header">
+                            <span class="booking-ref">Booking #${booking.ref}</span>
+                            <span class="booking-status status-${status}">
+                                ${status.charAt(0).toUpperCase() + status.slice(1)}
+                            </span>
+                        </div>
+                        <div class="booking-details">
+                            <div class="booking-info">
+                                <span class="booking-info-label">Hotel</span>
+                                <span class="booking-info-value">${booking.hotelName}</span>
+                            </div>
+                            <div class="booking-info">
+                                <span class="booking-info-label">Check-in</span>
+                                <span class="booking-info-value">${booking.checkIn}</span>
+                            </div>
+                            <div class="booking-info">
+                                <span class="booking-info-label">Check-out</span>
+                                <span class="booking-info-value">${booking.checkOut}</span>
+                            </div>
+                            <div class="booking-info">
+                                <span class="booking-info-label">Guests</span>
+                                <span class="booking-info-value">${booking.guests}</span>
+                            </div>
+                            <div class="booking-info">
+                                <span class="booking-info-label">Room Type</span>
+                                <span class="booking-info-value">${booking.roomType}</span>
+                            </div>
+                            <div class="booking-info">
+                                <span class="booking-info-label">Total Price</span>
+                                <span class="booking-info-value">${booking.totalPrice}</span>
+                            </div>
+                        </div>
+                        <div class="booking-actions">
+                            <button class="btn btn-view" onclick="viewBookingDetails('${booking.ref}')" title="View booking details">
+                                <i class="fas fa-eye me-2"></i>View Details
+                            </button>
+                            ${status === 'upcoming' ? `
+                                <button class="btn btn-cancel" onclick="cancelBooking('${booking.ref}')" title="Cancel booking">
+                                    <i class="fas fa-times me-2"></i>Cancel Booking
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getBookingStatus(booking) {
+            const today = new Date();
+            const checkIn = new Date(booking.checkIn);
+            const checkOut = new Date(booking.checkOut);
+
+            if (booking.status === 'cancelled') return 'cancelled';
+            if (checkOut < today) return 'past';
+            if (checkIn > today) return 'upcoming';
+            return 'current';
+        }
+
+        function cancelBooking(bookingRef) {
+            if (confirm('Are you sure you want to cancel this booking?')) {
+                let bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+                bookings = bookings.map(booking => {
+                    if (booking.ref === bookingRef) {
+                        return { ...booking, status: 'cancelled' };
+                    }
+                    return booking;
+                });
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+                showNotification('Booking cancelled successfully', 'success');
+                loadBookings();
+            }
+        }
+
+        function refreshBookings() {
+            loadBookings();
+            showNotification('Bookings refreshed', 'info');
+        }
+
+        // Add event listeners for filters
+        document.getElementById('bookingStatusFilter').addEventListener('change', loadBookings);
+        document.getElementById('bookingSearch').addEventListener('input', loadBookings);
     </script>
 
     <!-- Add the speak button to the HTML -->
