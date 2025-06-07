@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -809,21 +809,29 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <div class="language-dropdown ms-auto">
-                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-globe me-2"></i>
+                    <div class="language-selector">
+                        <button class="btn btn-link dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <span id="currentLanguage">English</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('en')">
-                                <i class="fas fa-flag-usa me-2"></i>English
-                            </a></li>
-                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('darija')">
-                                <i class="fas fa-mosque me-2"></i>Darija
-                            </a></li>
-                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('fr')">
-                                <i class="fas fa-flag me-2"></i>Français
-                            </a></li>
+                            <li>
+                                <a class="dropdown-item active" href="#" onclick="changeLanguage('en')">
+                                    <img src="https://flagcdn.com/w20/gb.png" alt="UK" class="me-2" style="width: 20px; height: 15px;">
+                                    <span>English</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="changeLanguage('fr')">
+                                    <img src="https://flagcdn.com/w20/fr.png" alt="France" class="me-2" style="width: 20px; height: 15px;">
+                                    <span>Français</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="changeLanguage('darija')">
+                                    <img src="https://flagcdn.com/w20/ma.png" alt="Morocco" class="me-2" style="width: 20px; height: 15px;">
+                                    <span>Darija</span>
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>

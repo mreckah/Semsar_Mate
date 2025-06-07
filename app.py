@@ -4,6 +4,11 @@ import logging
 import traceback
 import os
 from models import db, User, init_db
+from dotenv import load_dotenv
+import requests
+
+load_dotenv()
+API_KEY = os.getenv('API_KEY')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)  # For session management
@@ -148,21 +153,66 @@ def search():
         return jsonify({'error': 'An error occurred while searching for hotels. Please try again.'})
 
 @app.route('/get-user-info')
-@login_required
 def get_user_info():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not logged in'}), 401
-        
-    user = User.query.get(session['user_id'])
-    if user:
-        return jsonify({
-            'name': user.name,
-            'email': user.email
-        })
-    return jsonify({'error': 'User not found'}), 404
+    if 'user_id' in session:
+        user = User.query.get(session['user_id'])
+        if user:
+            return jsonify({
+                'name': user.name,
+                'email': user.email
+            })
+    return jsonify({'error': 'Not logged in'}), 401
 
-@app.route('/assistant')
+@app.route('/assistant', methods=['GET', 'POST'])
 def assistant():
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            if not data or 'message' not in data:
+                return jsonify({'error': 'No message provided'}), 400
+
+            # Get the message from the request
+            message = data['message']
+
+            # Make API call to OpenRouter
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {API_KEY}',
+                'HTTP-Referer': request.host_url,
+                'X-Title': 'Semsar Mate'
+            }
+
+            payload = {
+                'model': 'anthropic/claude-3-haiku:beta',
+                'max_tokens': 300,
+                'messages': [
+                    {
+                        'role': 'system',
+                        'content': 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Keep responses concise and focused on hotel recommendations and travel advice.'
+                    },
+                    {
+                        'role': 'user',
+                        'content': message
+                    }
+                ]
+            }
+
+            response = requests.post('https://openrouter.ai/api/v1/chat/completions', 
+                                  headers=headers, 
+                                  json=payload)
+            
+            if response.ok:
+                data = response.json()
+                if data.get('choices') and data['choices'][0].get('message'):
+                    return jsonify({'response': data['choices'][0]['message']['content']})
+                else:
+                    return jsonify({'error': 'Invalid response format from API'}), 500
+            else:
+                return jsonify({'error': 'Failed to get response from AI service'}), 500
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
     return render_template('assistant.html')
 
 if __name__ == '__main__':
