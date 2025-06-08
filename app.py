@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, session
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 from hotel_scraper import get_hotels_by_city, import_csv_data, Hotel, Session
 import logging
 import traceback

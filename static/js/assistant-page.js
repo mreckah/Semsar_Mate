@@ -1,264 +1,523 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const chatForm = document.getElementById('chatForm');
-    const messageInput = document.getElementById('messageInput');
-    const chatMessages = document.getElementById('chatMessages');
-    const sendButton = document.getElementById('sendButton');
-    const clearButton = document.getElementById('clearButton');
-    const exportButton = document.getElementById('exportButton');
-    const voiceButton = document.getElementById('voiceButton');
-    const callButton = document.getElementById('callButton');
-    let isCallActive = false;
-    let recognition = null;
-    let synthesis = window.speechSynthesis;
-    let audioContext = null;
-    let mediaStream = null;
-    let selectedVoice = null;
+// Assistant Page JavaScript
 
-    // Initialize speech synthesis and select a voice
-    function initSpeechSynthesis() {
-        if (synthesis) {
-            // Wait for voices to be loaded
-            if (speechSynthesis.getVoices().length === 0) {
-                speechSynthesis.addEventListener('voiceschanged', selectVoice);
-            } else {
-                selectVoice();
+// Get user name from session
+function updateUserName() {
+    fetch('/get-user-info')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Not logged in');
             }
-        }
-    }
-
-    // Select a voice based on language
-    function selectVoice() {
-        const voices = speechSynthesis.getVoices();
-        // Try to find a female English voice
-        selectedVoice = voices.find(voice => 
-            voice.lang.includes('en') && voice.name.includes('Female')
-        ) || voices.find(voice => 
-            voice.lang.includes('en')
-        ) || voices[0];
-        
-        console.log('Selected voice:', selectedVoice ? selectedVoice.name : 'No voice selected');
-    }
-
-    // Initialize audio context
-    async function initAudio() {
-        try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            return true;
-        } catch (error) {
-            console.error('Error initializing audio:', error);
-            addMessage('Error accessing microphone. Please check your permissions.', 'assistant');
-            return false;
-        }
-    }
-
-    // Initialize speech recognition
-    function initSpeechRecognition() {
-        if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = 'en-US';
-
-            recognition.onresult = async function(event) {
-                const transcript = Array.from(event.results)
-                    .map(result => result[0].transcript)
-                    .join('');
-                
-                if (event.results[0].isFinal) {
-                    addMessage(transcript, 'user');
-                    // Process the message and get AI response
-                    const response = await processMessage(transcript);
-                    // Speak the response
-                    speak(response);
-                }
-            };
-
-            recognition.onerror = function(event) {
-                console.error('Speech recognition error:', event.error);
-                stopCall();
-            };
-
-            recognition.onend = function() {
-                if (isCallActive) {
-                    recognition.start();
-                }
-            };
-
-            return recognition;
-        }
-        return null;
-    }
-
-    // Process message and get AI response
-    async function processMessage(message) {
-        try {
-            const response = await fetch('/assistant', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ message: message })
-            });
-            
-            let data;
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                data = await response.json();
-            } else {
-                throw new Error('Server returned non-JSON response');
+            return response.json();
+        })
+        .then(data => {
+            if (data.name) {
+                document.getElementById('userName').textContent = ' ' + data.name;
             }
-            
-            if (response.ok && data.response) {
-                addMessage(data.response, 'assistant');
-                return data.response;
-            } else {
-                const errorMsg = data.error || 'An error occurred. Please try again.';
-                addMessage(errorMsg, 'assistant');
-                return errorMsg;
-            }
-        } catch (error) {
+        })
+        .catch(error => {
             console.error('Error:', error);
-            const errorMsg = 'Sorry, I encountered an error. Please try again.';
-            addMessage(errorMsg, 'assistant');
-            return errorMsg;
+            // Optionally redirect to signin or keep as Guest
+        });
+}
+
+// Call updateUserName when page loads
+document.addEventListener('DOMContentLoaded', updateUserName);
+
+// Configuration
+const API_CONFIG = {
+    model: 'anthropic/claude-3-haiku:beta',
+    max_tokens: 300,
+    system_prompt: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Keep responses concise and focused on hotel recommendations and travel advice.'
+};
+
+// Language state
+let currentLanguage = 'en';
+const languageConfig = {
+    en: {
+        name: 'English',
+        code: 'en-US',
+        systemPrompt: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Keep responses concise and focused on hotel recommendations and travel advice.'
+    },
+    darija: {
+        name: 'Darija',
+        code: 'ar-MA',
+        systemPrompt: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Respond in Moroccan Darija (Moroccan Arabic). Keep responses concise and focused on hotel recommendations and travel advice.'
+    },
+    fr: {
+        name: 'Français',
+        code: 'fr-FR',
+        systemPrompt: 'You are a helpful travel assistant for Semsar Mate, a hotel booking platform in Morocco. Respond in French. Keep responses concise and focused on hotel recommendations and travel advice.'
+    }
+};
+
+function changeLanguage(lang) {
+    currentLanguage = lang;
+    const languageText = document.getElementById('currentLanguage');
+
+    // Update button text
+    languageText.textContent = languageConfig[currentLanguage].name;
+
+    // Update active state in dropdown
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('onclick').includes(lang)) {
+            item.classList.add('active');
         }
+    });
+
+    // Update recognition language
+    if (recognition) {
+        recognition.lang = languageConfig[currentLanguage].code;
     }
 
-    // Initialize speech synthesis
-    function speak(text) {
-        if (synthesis && selectedVoice) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.voice = selectedVoice;
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
-            utterance.volume = 1.0;
-            synthesis.speak(utterance);
-        }
+    // Update API config
+    API_CONFIG.system_prompt = languageConfig[currentLanguage].systemPrompt;
+
+    // Show confirmation message
+    let message;
+    switch(currentLanguage) {
+        case 'en':
+            message = 'Switched to English. How can I help you?';
+            break;
+        case 'darija':
+            message = 'تم التحويل إلى الدارجة. كيف يمكنني مساعدتك؟';
+            break;
+        case 'fr':
+            message = 'Passé au français. Comment puis-je vous aider?';
+            break;
+    }
+    addMessage(message, 'assistant');
+}
+
+// Speech Synthesis
+let speechSynthesis = window.speechSynthesis;
+let speaking = false;
+let currentUtterance = null;
+
+function speakText(text) {
+    if (speaking) {
+        speechSynthesis.cancel();
     }
 
-    // Start voice call
-    async function startCall() {
-        if (!await initAudio()) {
-            return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    utterance.lang = languageConfig[currentLanguage].code;
+
+    // Get available voices and set a preferred voice
+    const voices = speechSynthesis.getVoices();
+    const preferredVoice = voices.find(voice =>
+        voice.lang === languageConfig[currentLanguage].code
+    ) || voices[0];
+
+    if (preferredVoice) {
+        utterance.voice = preferredVoice;
+    }
+
+    utterance.onstart = () => {
+        speaking = true;
+        const speakButton = document.getElementById('speakButton');
+        if (speakButton) {
+            speakButton.innerHTML = '<i class="fas fa-stop"></i>';
+        }
+    };
+
+    utterance.onend = () => {
+        speaking = false;
+        const speakButton = document.getElementById('speakButton');
+        if (speakButton) {
+            speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+        }
+    };
+
+    currentUtterance = utterance;
+    speechSynthesis.speak(utterance);
+}
+
+function toggleSpeech() {
+    const button = document.getElementById('speakButton');
+    if (speaking) {
+        speechSynthesis.cancel();
+        speaking = false;
+        button.innerHTML = '<i class="fas fa-volume-up"></i>';
+    } else {
+        const lastMessage = document.querySelector('.message.assistant:last-child .message-content');
+        if (lastMessage) {
+            speakText(lastMessage.textContent);
+        }
+    }
+}
+
+// Event Handlers
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+function askQuestion(question) {
+    document.getElementById('user-input').value = question;
+    sendMessage();
+}
+
+// Message Handling
+function addMessage(content, sender) {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${sender}`;
+
+    const avatar = sender === 'user' ?
+        '<div class="message-avatar"><i class="fas fa-user"></i></div>' :
+        '<div class="message-avatar"><i class="fas fa-robot"></i></div>';
+
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    messageDiv.innerHTML = `
+        ${avatar}
+        <div class="message-content">
+            ${content}
+            <div class="message-time">${time}</div>
+        </div>
+        <div class="message-actions">
+            <button class="message-action-btn" onclick="copyMessage(this)" title="Copy message">
+                <i class="fas fa-copy"></i>
+            </button>
+            <button class="message-action-btn" onclick="speakMessage(this)" title="Speak message">
+                <i class="fas fa-volume-up"></i>
+            </button>
+        </div>
+    `;
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function copyMessage(button) {
+    const messageContent = button.closest('.message').querySelector('.message-content').textContent;
+    navigator.clipboard.writeText(messageContent).then(() => {
+        // Show copy confirmation
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+            button.innerHTML = originalIcon;
+        }, 2000);
+    });
+}
+
+function speakMessage(button) {
+    const messageContent = button.closest('.message').querySelector('.message-content').textContent;
+    speakText(messageContent);
+}
+
+async function sendMessage() {
+    const input = document.getElementById('user-input');
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    addMessage(message, 'user');
+    input.value = '';
+
+    try {
+        const response = await fetch('/assistant', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: message
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        if (!recognition) {
-            recognition = initSpeechRecognition();
+        const data = await response.json();
+        if (data.error) {
+            throw new Error(data.error);
         }
 
-        if (recognition) {
-            isCallActive = true;
-            callButton.innerHTML = '<i class="fas fa-phone-slash"></i> End Call';
-            callButton.classList.add('active');
+        const aiResponse = data.response;
+        addMessage(aiResponse, 'assistant');
+
+        // Auto-speak the response
+        speakText(aiResponse);
+    } catch (error) {
+        console.error('Detailed Error:', error);
+        const errorMessage = `I apologize, but I'm having trouble connecting to my brain right now. Please try again in a moment. (Error: ${error.message})`;
+        addMessage(errorMessage, 'assistant');
+    }
+}
+
+// Initialize speech synthesis
+if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = () => {
+        const voices = speechSynthesis.getVoices();
+        console.log('Available voices:', voices);
+    };
+}
+
+// Speech Recognition
+let recognition = null;
+let isRecording = false;
+
+function initSpeechRecognition() {
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = languageConfig[currentLanguage].code;
+
+        recognition.onstart = () => {
+            isRecording = true;
+            const voiceButton = document.getElementById('voiceButton');
+            const voiceStatus = document.getElementById('voiceStatus');
+            if (voiceButton) voiceButton.classList.add('recording');
+            if (voiceStatus) voiceStatus.classList.add('active');
+            // Stop any ongoing speech when starting recording
+            if (speaking) {
+                speechSynthesis.cancel();
+                speaking = false;
+                const speakButton = document.getElementById('speakButton');
+                if (speakButton) {
+                    speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                }
+            }
+        };
+
+        recognition.onend = () => {
+            isRecording = false;
+            const voiceButton = document.getElementById('voiceButton');
+            const voiceStatus = document.getElementById('voiceStatus');
+            if (voiceButton) voiceButton.classList.remove('recording');
+            if (voiceStatus) voiceStatus.classList.remove('active');
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('user-input').value = transcript;
+            sendMessage();
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            isRecording = false;
+            const voiceButton = document.getElementById('voiceButton');
+            const voiceStatus = document.getElementById('voiceStatus');
+            if (voiceButton) voiceButton.classList.remove('recording');
+            if (voiceStatus) voiceStatus.classList.remove('active');
+
+            let errorMessage = 'Error with voice input. ';
+            switch(event.error) {
+                case 'no-speech':
+                    errorMessage += 'No speech was detected.';
+                    break;
+                case 'audio-capture':
+                    errorMessage += 'No microphone was found.';
+                    break;
+                case 'not-allowed':
+                    errorMessage += 'Microphone access was denied.';
+                    break;
+                default:
+                    errorMessage += 'Please try again.';
+            }
+            addMessage(errorMessage, 'assistant');
+        };
+    } else {
+        console.error('Speech recognition not supported');
+        const voiceButton = document.getElementById('voiceButton');
+        if (voiceButton) {
+            voiceButton.style.display = 'none';
+        }
+    }
+}
+
+function toggleVoiceInput() {
+    if (!recognition) {
+        initSpeechRecognition();
+    }
+
+    if (isRecording) {
+        recognition.stop();
+    } else {
+        // Stop any ongoing speech before starting recording
+        if (speaking) {
+            speechSynthesis.cancel();
+            speaking = false;
+            const speakButton = document.getElementById('speakButton');
+            if (speakButton) {
+                speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+            }
+        }
+        try {
             recognition.start();
-            addMessage('Voice call started. You can speak now.', 'assistant');
-            speak('Voice call started. You can speak now.');
-        } else {
-            addMessage('Sorry, voice calls are not supported in your browser.', 'assistant');
+        } catch (error) {
+            console.error('Error starting speech recognition:', error);
         }
     }
+}
 
-    // Stop voice call
-    function stopCall() {
-        isCallActive = false;
-        if (recognition) {
-            recognition.stop();
-        }
-        if (mediaStream) {
-            mediaStream.getTracks().forEach(track => track.stop());
-        }
-        if (audioContext) {
-            audioContext.close();
-        }
-        callButton.innerHTML = '<i class="fas fa-phone"></i> Start Call';
-        callButton.classList.remove('active');
-        addMessage('Voice call ended.', 'assistant');
-        speak('Voice call ended.');
-    }
+// Voice Agent Functionality
+const voiceAgentBtn = document.getElementById('voiceAgentBtn');
+const voiceAgentInput = document.getElementById('voiceAgentInput');
+const commandInput = document.getElementById('commandInput');
+const sendCommandBtn = document.getElementById('sendCommandBtn');
 
-    // Handle call button click
-    if (callButton) {
-        callButton.addEventListener('click', async function() {
-            if (!isCallActive) {
-                await startCall();
+let isAgentListening = false;
+let agentRecognition = null;
+
+function initAgentRecognition() {
+    if ('webkitSpeechRecognition' in window) {
+        agentRecognition = new webkitSpeechRecognition();
+        agentRecognition.continuous = true;
+        agentRecognition.interimResults = false;
+        agentRecognition.lang = 'en-US';
+
+        agentRecognition.onstart = () => {
+            isAgentListening = true;
+            voiceAgentBtn.classList.add('active');
+            voiceAgentInput.classList.add('active');
+            speakResponse('Agent Mode Activated');
+        };
+
+        agentRecognition.onresult = (event) => {
+            const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
+            commandInput.value = command;
+            handleAgentCommand(command);
+        };
+
+        agentRecognition.onerror = (event) => {
+            console.error('Agent recognition error:', event.error);
+            if (event.error === 'no-speech') {
+                agentRecognition.start();
             } else {
-                stopCall();
+                stopAgentListening();
             }
-        });
-    }
+        };
 
-    // Add message to chat
-    function addMessage(text, sender) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${sender}`;
-        
-        const now = new Date();
-        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        messageDiv.innerHTML = `
-            <div class="message-avatar">
-                <i class="fas ${sender === 'user' ? 'fa-user' : 'fa-robot'}"></i>
-            </div>
-            <div class="message-content">
-                ${text}
-                <div class="message-time">${timeString}</div>
-            </div>
-        `;
-        
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    // Handle form submission
-    if (chatForm) {
-        chatForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const message = messageInput.value.trim();
-            if (message) {
-                messageInput.value = '';
-                addMessage(message, 'user');
-                const response = await processMessage(message);
-                speak(response);
+        agentRecognition.onend = () => {
+            if (isAgentListening) {
+                agentRecognition.start();
             }
-        });
+        };
+    } else {
+        alert('Speech recognition is not supported in your browser.');
     }
+}
 
-    // Clear chat history
-    if (clearButton) {
-        clearButton.addEventListener('click', function() {
-            chatMessages.innerHTML = '';
-        });
+function startAgentListening() {
+    if (!agentRecognition) {
+        initAgentRecognition();
     }
-
-    // Export chat history
-    if (exportButton) {
-        exportButton.addEventListener('click', function() {
-            const messages = Array.from(chatMessages.children).map(message => {
-                const sender = message.classList.contains('user') ? 'User' : 'Assistant';
-                const content = message.querySelector('.message-content').textContent.trim();
-                const time = message.querySelector('.message-time').textContent;
-                return `[${time}] ${sender}: ${content}`;
-            }).join('\n\n');
-            
-            const blob = new Blob([messages], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'chat-history.txt';
-            a.click();
-            window.URL.revokeObjectURL(url);
-        });
+    if (agentRecognition) {
+        agentRecognition.start();
     }
+}
 
-    // Auto-resize textarea
-    if (messageInput) {
-        messageInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
+function stopAgentListening() {
+    if (agentRecognition) {
+        agentRecognition.stop();
     }
+    isAgentListening = false;
+    voiceAgentBtn.classList.remove('active');
+    voiceAgentInput.classList.remove('active');
+    commandInput.value = '';
+    localStorage.setItem('agentActive', 'false');
+    speakResponse('Agent Mode Deactivated');
+}
 
-    // Initialize speech synthesis
-    initSpeechSynthesis();
-}); 
+function handleAgentCommand(command) {
+    // Scroll commands
+    if (command.includes('scroll up')) {
+        window.scrollBy(0, -300);
+        speakResponse('Scrolling up');
+    } else if (command.includes('scroll down')) {
+        window.scrollBy(0, 300);
+        speakResponse('Scrolling down');
+    } else if (command.includes('scroll to top')) {
+        window.scrollTo(0, 0);
+        speakResponse('Scrolling to top');
+    } else if (command.includes('scroll to bottom')) {
+        window.scrollTo(0, document.body.scrollHeight);
+        speakResponse('Scrolling to bottom');
+    }
+    // Navigation commands
+    else if (command.includes('go to home')) {
+        localStorage.setItem('agentActive', 'true'); // Keep agent active during navigation
+        window.location.href = '/index';
+        speakResponse('Navigating to home');
+    }
+    // Language commands
+    else if (command.includes('switch to english')) {
+        document.getElementById('languageDropdown').textContent = 'English';
+        speakResponse('Switching to English');
+    } else if (command.includes('switch to french')) {
+        document.getElementById('languageDropdown').textContent = 'French';
+        speakResponse('Switching to French');
+    } else if (command.includes('switch to darija')) {
+        document.getElementById('languageDropdown').textContent = 'Darija';
+        speakResponse('Switching to Darija');
+    }
+    // Help command
+    else if (command.includes('help') || command.includes('what can you do')) {
+        speakResponse('I can help you scroll, navigate to different pages, and switch languages. Just tell me what you want to do.');
+    }
+    // Deactivation command
+    else if (command.includes('deactivate') || command.includes('stop listening')) {
+        stopAgentListening();
+    }
+    // Unknown command
+    else {
+        speakResponse('Sorry, I did not understand that command. Say help to know what I can do.');
+    }
+}
+
+function speakResponse(text) {
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        speechSynthesis.speak(utterance);
+    }
+}
+
+// Event Listeners for the agent
+voiceAgentBtn.addEventListener('click', () => {
+    if (!isAgentListening) {
+        startAgentListening();
+    } else {
+        stopAgentListening();
+    }
+});
+
+sendCommandBtn.addEventListener('click', () => {
+    const command = commandInput.value.toLowerCase();
+    if (command) {
+        handleAgentCommand(command);
+        commandInput.value = '';
+    }
+});
+
+commandInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        const command = commandInput.value.toLowerCase();
+        if (command) {
+            handleAgentCommand(command);
+            commandInput.value = '';
+        }
+    }
+});
+
+// Initialize agent on page load
+document.addEventListener('DOMContentLoaded', () => {
+    initAgentRecognition();
+    // Check if agent was active on previous page
+    if (localStorage.getItem('agentActive') === 'true') {
+        startAgentListening();
+    }
+});
+
+// Initialize speech recognition when the page loads
+window.addEventListener('load', initSpeechRecognition);
+
