@@ -1,7 +1,7 @@
 # 🏨 Semsar Mate - AI-Powered Hotel Booking Platform
 <h1 align="center">
   <a>
-    <img height="120" src="![image](https://github.com/user-attachments/assets/8146e460-8996-4b7c-bc77-a3ff187247e4)" alt="QuizApp" style="max-width: 300px; border-radius: 10px;">
+    <img height="120" src="https://github.com/user-attachments/assets/8146e460-8996-4b7c-bc77-a3ff187247e4" alt="QuizApp" style="max-width: 300px; border-radius: 10px;">
   </a>
 </h1>
 <p align="center">
