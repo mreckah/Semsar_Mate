@@ -43,7 +43,7 @@ def index():
 def home():
     if 'user_id' in session:
         return render_template('index.html')
-    return render_template('home.html')
+    return render_template('signin.html')
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
