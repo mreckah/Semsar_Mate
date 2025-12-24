@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/mreckah/Semsar_Mate.git'
+                git branch: 'main', credentialsId: 'fd7d6180-4318-478f-893a-e3d895d0d858', url: 'https://github.com/mreckah/Semsar_Mate.git'
             }
         }
 
