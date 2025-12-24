@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semsar Mate - Your Moroccan Hotel Booking Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <link href="{{ url_for('static', filename='css/home.css') }}" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-hotel me-2"></i>Semsar Mate
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Toggle navigation menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signin">
+                            <i class="fas fa-sign-in-alt me-1"></i>Sign In
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signup">
+                            <i class="fas fa-user-plus me-1"></i>Sign Up
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="section hero-section">
+        <div class="section-content">
+            <div class="hero-content">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Semsar Mate Logo" class="hero-logo">
+                <div class="shine-overlay"></div>
+                <h2 class="hero-title">Discover Your Perfect Stay in Morocco</h2>
+                <p class="hero-subtitle">Find and book the best hotels across Morocco with our easy-to-use platform</p>
+                <a href="/signin" class="btn btn-primary">
+                    <i class="fas fa-arrow-right me-2"></i>Get Started
+                </a>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </section>
+
+    <!-- Popular Cities Section -->
+    <section class="section popular-cities">
+        <div class="container">
+            <h2 class="section-title">Popular Destinations</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="city-card">
+                        <img src="{{ url_for('static', filename='images/kesh.png') }}" alt="Marrakech" class="city-image">
+                        <div class="city-overlay">
+                            <h3 class="city-name">Marrakech</h3>
+                            <p class="city-description">Experience the vibrant culture and stunning architecture of Morocco's most famous city.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="city-card">
+                        <img src="{{ url_for('static', filename='images/casablanca.png') }}" alt="Casablanca" class="city-image">
+                        <div class="city-overlay">
+                            <h3 class="city-name">Casablanca</h3>
+                            <p class="city-description">Discover the modern heart of Morocco with its stunning Hassan II Mosque.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="city-card">
+                        <img src="{{ url_for('static', filename='images/agadir.png') }}" alt="Agadir" class="city-image">
+                        <div class="city-overlay">
+                            <h3 class="city-name">Agadir</h3>
+                            <p class="city-description">Enjoy beautiful beaches and perfect weather in this coastal paradise.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section features-section">
+        <div class="container">
+            <h2 class="section-title">Why Choose Us</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <i class="fas fa-search feature-icon"></i>
+                        <h3 class="feature-title">Easy Search</h3>
+                        <p class="feature-text">Find your perfect hotel with our advanced search filters and real-time availability.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <i class="fas fa-star feature-icon"></i>
+                        <h3 class="feature-title">Best Rates</h3>
+                        <p class="feature-text">Get the best prices and exclusive deals on hotels across Morocco.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <i class="fas fa-shield-alt feature-icon"></i>
+                        <h3 class="feature-title">Secure Booking</h3>
+                        <p class="feature-text">Book with confidence with our secure payment system and instant confirmation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h3 class="footer-title">Semsar Mate</h3>
+                    <p>Your trusted partner for hotel bookings in Morocco.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-link">About Us</a></li>
+                        <li><a href="#" class="footer-link">Contact</a></li>
+                        <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                        <li><a href="#" class="footer-link">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h3 class="footer-title">Contact Us</h3>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-envelope me-2"></i> m.reckahwalt@gmail.com</li>
+                        <li><i class="fas fa-phone me-2"></i> +212 612 12 12 12</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i> Casablanca, Morocco</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- External Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+</body>
+</html> 

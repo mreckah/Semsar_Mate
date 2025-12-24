@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = 'dockerhub-creds'
+        DOCKERHUB_USERNAME = 'oussama75'
+        IMAGE = "${DOCKERHUB_USERNAME}/semsar-aws-mate"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/mreckah/Semsar_Mate.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'pip install -r requirements.txt'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', DOCKERHUB_CREDENTIALS) {
+                        def appImage = docker.build("${IMAGE}:latest")
+                        appImage.push()
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'docker-compose down'
+                sh 'docker-compose pull'   // Pull the latest image from Docker Hub
+                sh 'docker-compose up -d'
+            }
+        }
+    }
+}
