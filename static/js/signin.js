@@ -19,7 +19,7 @@ document.getElementById('signinForm').addEventListener('submit', async (e) => {
         const data = await response.json();
 
         if (response.ok) {
-            window.location.href = '/index';
+            window.location.href = '/home';
         } else {
             errorMessage.textContent = data.error || 'Invalid email or password';
             errorMessage.style.display = 'block';
