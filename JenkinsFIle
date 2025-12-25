@@ -7,7 +7,6 @@ pipeline {
     }
 
     stages {
-   
         stage('Cloning Git') {
             steps {
                 echo 'Cloning repository...'
@@ -18,70 +17,33 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "Building Docker image ${DOCKER_IMAGE}:${DOCKER_TAG}..."
-                script {
-                    if (isUnix()) {
-                        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                    } else {
-                        bat "docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% ."
-                    }
-                }
+                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
             }
         }
 
         stage('Test Image') {
             steps {
                 echo "Testing Docker image ${DOCKER_IMAGE}:${DOCKER_TAG}..."
-                script {
-                    if (isUnix()) {
-                        sh '''
-                          docker stop test_container || true
-                          docker rm test_container || true
-                          docker run --rm -d --name test_container ${DOCKER_IMAGE}:${DOCKER_TAG}
-                          sleep 5
-                          docker stop test_container || true
-                        '''
-                    } else {
-                        bat '''
-                          docker stop test_container 2>NUL
-                          docker rm test_container 2>NUL
-                          docker run --rm -d --name test_container %DOCKER_IMAGE%:%DOCKER_TAG%
-                          timeout /t 5
-                          docker stop test_container 2>NUL
-                        '''
-                    }
-                }
+                sh """
+                    docker rm -f test_container || true
+                    docker run --rm -d --name test_container ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    sleep 5
+                    docker rm -f test_container || true
+                """
             }
         }
 
         stage('Publish Image') {
             steps {
                 echo "Publishing Docker image to Docker Hub..."
-                script {
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'docker-hub-token',
-                            usernameVariable: 'DOCKER_USER',
-                            passwordVariable: 'DOCKER_PASS'
-                        )
-                    ]) {
-                        if (isUnix()) {
-                            sh '''
-                              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                              docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                              docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                              docker push ${DOCKER_IMAGE}:latest
-                              docker logout
-                            '''
-                        } else {
-                            bat '''
-                              echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
-                              docker push %DOCKER_IMAGE%:%DOCKER_TAG%
-                              docker tag %DOCKER_IMAGE%:%DOCKER_TAG% %DOCKER_IMAGE%:latest
-                              docker push %DOCKER_IMAGE%:latest
-                              docker logout
-                            '''
-                        }
-                    }
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                        docker push ${DOCKER_IMAGE}:latest
+                        docker logout
+                    """
                 }
             }
         }
@@ -89,21 +51,10 @@ pipeline {
         stage('Deploy Image') {
             steps {
                 echo "Deploying Docker image ${DOCKER_IMAGE}:${DOCKER_TAG}..."
-                script {
-                    if (isUnix()) {
-                        sh '''
-                          docker stop deployed_container || true
-                          docker rm deployed_container || true
-                          docker run -d --name deployed_container -p 5000:80 ${DOCKER_IMAGE}:${DOCKER_TAG}
-                        '''
-                    } else {
-                        bat '''
-                          docker stop deployed_container 2>NUL
-                          docker rm deployed_container 2>NUL
-                          docker run -d --name deployed_container -p 5001:80 %DOCKER_IMAGE%:%DOCKER_TAG%
-                        '''
-                    }
-                }
+                sh """
+                    docker rm -f deployed_container || true
+                    docker run -d --name deployed_container -p 80:5000 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                """
             }
         }
     }
@@ -116,21 +67,10 @@ pipeline {
             echo 'Pipeline failed!'
         }
         always {
-            script {
-                if (isUnix()) {
-                    sh '''
-                      docker stop test_container || true
-                      docker rm test_container || true
-                      docker logout || true
-                    '''
-                } else {
-                    bat '''
-                      docker stop test_container 2>NUL
-                      docker rm test_container 2>NUL
-                      docker logout
-                    '''
-                }
-            }
+            sh """
+                docker rm -f test_container || true
+                docker logout || true
+            """
         }
     }
 }
