@@ -4,56 +4,76 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'oussama75/semsar-aws-mate'
         DOCKER_TAG   = "${BUILD_NUMBER}"
+        CONTAINER    = 'semsar-mate'
     }
 
     stages {
-        stage('Cloning Git') {
+
+        stage('Checkout') {
             steps {
-                echo 'Cloning repository...'
                 checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image ${DOCKER_IMAGE}:${DOCKER_TAG}..."
-                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-            }
-        }
-
-        stage('Test Image') {
-            steps {
-                echo "Testing Docker image ${DOCKER_IMAGE}:${DOCKER_TAG}..."
                 sh """
-                    docker rm -f test_container || true
-                    docker run --rm -d --name test_container ${DOCKER_IMAGE}:${DOCKER_TAG}
-                    sleep 5
-                    docker rm -f test_container || true
+                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
                 """
             }
         }
 
-        stage('Publish Image') {
+        stage('Test Docker Image') {
             steps {
-                echo "Publishing Docker image to Docker Hub..."
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                sh """
+                    docker rm -f test-${CONTAINER} || true
+
+                    docker run -d \
+                      --name test-${CONTAINER} \
+                      -p 5001:5000 \
+                      ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+                    sleep 5
+
+                    curl -f http://localhost:5001 || exit 1
+
+                    docker rm -f test-${CONTAINER}
+                """
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'docker-hub-token',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     sh """
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+
                         docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
                         docker push ${DOCKER_IMAGE}:latest
+
                         docker logout
                     """
                 }
             }
         }
 
-        stage('Deploy Image') {
+        stage('Deploy to Production') {
             steps {
-                echo "Deploying Docker image ${DOCKER_IMAGE}:${DOCKER_TAG}..."
                 sh """
-                    docker rm -f deployed_container || true
-                    docker run -d --name deployed_container -p 80:5000 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    docker rm -f ${CONTAINER} || true
+
+                    docker run -d \
+                      --name ${CONTAINER} \
+                      --restart always \
+                      -p 80:5000 \
+                      ${DOCKER_IMAGE}:${DOCKER_TAG}
                 """
             }
         }
@@ -61,14 +81,14 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Pipeline completed successfully.'
         }
         failure {
-            echo 'Pipeline failed!'
+            echo 'Pipeline failed.'
         }
         always {
             sh """
-                docker rm -f test_container || true
+                docker rm -f test-${CONTAINER} || true
                 docker logout || true
             """
         }
