@@ -17,20 +17,14 @@ USER_NAME=$(whoami)
 # -------------------------
 echo "Updating system packages..."
 sudo apt-get update -y
-sudo apt-get upgrade -y
 
 # -------------------------
 # INSTALL REQUIRED PACKAGES
 # -------------------------
 echo "Installing dependencies..."
 sudo apt-get install -y \
-    curl \
-    gnupg \
-    lsb-release \
-    apt-transport-https \
-    openjdk-11-jdk \
-    unzip \
-    git
+    curl gnupg lsb-release apt-transport-https \
+    openjdk-17-jdk unzip git net-tools
 
 # -------------------------
 # INSTALL DOCKER
@@ -38,8 +32,7 @@ sudo apt-get install -y \
 if ! command -v docker &> /dev/null; then
     echo "Installing Docker..."
     curl -fsSL https://get.docker.com | sudo sh
-    sudo systemctl enable docker
-    sudo systemctl start docker
+    sudo systemctl enable --now docker
 else
     echo "Docker already installed."
 fi
@@ -47,61 +40,70 @@ fi
 # -------------------------
 # DOCKER PERMISSIONS
 # -------------------------
-echo "Adding user to docker group..."
+echo "Setting up Docker permissions..."
 sudo usermod -aG docker $USER_NAME
-
-# Apply docker group changes immediately
-newgrp docker <<EOF
+# This is the fix for your Jenkins Pipeline error:
+sudo usermod -aG docker jenkins || true 
 
 # -------------------------
 # INSTALL JENKINS
 # -------------------------
-if ! command -v java &> /dev/null; then
-    echo "Installing Java (required for Jenkins)..."
-    sudo apt-get install -y openjdk-11-jdk
-fi
-
 if ! command -v jenkins &> /dev/null; then
     echo "Installing Jenkins..."
-    curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
-        /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-
-    echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-        https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+    sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+        https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+    
+    echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+        https://pkg.jenkins.io/debian-stable binary/" | sudo tee \
         /etc/apt/sources.list.d/jenkins.list > /dev/null
 
     sudo apt-get update -y
     sudo apt-get install -y jenkins
-    sudo systemctl enable jenkins
-    sudo systemctl start jenkins
 else
     echo "Jenkins already installed."
 fi
 
 # -------------------------
-# PULL DOCKER IMAGE
+# JENKINS IPV4 & PERMISSION OVERRIDE
 # -------------------------
-echo "Pulling Docker image for app..."
+echo "Configuring Jenkins Systemd Overrides..."
+sudo mkdir -p /etc/systemd/system/jenkins.service.d/
+
+cat <<EOF | sudo tee /etc/systemd/system/jenkins.service.d/override.conf
+[Service]
+Environment="JAVA_OPTS=-Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true"
+Environment="JENKINS_OPTS=--httpListenAddress=0.0.0.0 --httpPort=${JENKINS_PORT}"
+EOF
+
+# Reload and Restart to apply Docker group and IPv4 changes
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo systemctl restart jenkins
+
+# -------------------------
+# DEPLOY APP CONTAINER
+# -------------------------
+echo "Deploying Application Container..."
+# Ensure docker is ready
+sudo chmod 666 /var/run/docker.sock
+
 docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
-
-# -------------------------
-# STOP OLD CONTAINER
-# -------------------------
-echo "Stopping old app container if exists..."
 docker rm -f ${APP_NAME} || true
-
-# -------------------------
-# RUN APP CONTAINER
-# -------------------------
-echo "Starting application container..."
 docker run -d \
   --name ${APP_NAME} \
   --restart always \
   -p ${HOST_PORT}:${APP_PORT} \
   ${DOCKER_IMAGE}:${DOCKER_TAG}
 
-echo "Deployment completed."
-echo "App URL: http://$(curl -s ifconfig.me)"
-echo "Jenkins URL: http://$(curl -s ifconfig.me):${JENKINS_PORT}"
+# -------------------------
+# SUMMARY
+# -------------------------
+PUBLIC_IP=$(curl -s ifconfig.me)
+ADMIN_PWD=$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword || echo "Wait for Jenkins to start...")
 
-EOF
+echo "------------------------------------------------"
+echo "Deployment Completed Successfully!"
+echo "App URL:      http://${PUBLIC_IP}"
+echo "Jenkins URL:  http://${PUBLIC_IP}:${JENKINS_PORT}"
+echo "Admin Password: ${ADMIN_PWD}"
+echo "------------------------------------------------"
